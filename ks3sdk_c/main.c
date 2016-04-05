@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "api.h"
-#include "sign.h"
 
 void api_test_bucket_relative();
 void api_test_object_relative();
