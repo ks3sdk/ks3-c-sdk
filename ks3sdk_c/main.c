@@ -11,7 +11,7 @@ int main()
 	api_test_bucket_relative();
 	api_test_object_relative();
 	
-	system("pause");
+	//system("pause");
 	return 0;
 }
 
