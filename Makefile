@@ -1,7 +1,7 @@
 CC = gcc -g 
 #CC = g++ -g 
-CFLAGES = -I curl -O2
-LIBS = -L lib -lcurl
+CFLAGES = -I ./curl -O2
+LIBS = -L ./lib -lcurl
 SRCS := $(wildcard *.c)
 OBJS := $(patsubst %.c, %.o, ${SRCS})
 LIBOBJS := $(filter-out main.o , $(OBJS))

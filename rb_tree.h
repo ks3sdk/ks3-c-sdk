@@ -37,7 +37,7 @@ rb_node_t* rb_search_compare(key_value* kv, rb_node_t* root,
 	int (*compare_func)(key_value*, key_value*));
 rb_node_t* rb_erase_compare(key_value* kv, rb_node_t* root,
 	int (*compare_func)(key_value*, key_value*));
-rb_node_t* rb_erase_all(rb_node_t* root);
+void rb_erase_all(rb_node_t* root);
 
 #ifdef __cplusplus
 }

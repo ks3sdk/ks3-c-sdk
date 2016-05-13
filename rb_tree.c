@@ -359,7 +359,7 @@ rb_node_t* rb_erase_compare(key_value* kv, rb_node_t* root,
     return root;
 }
 
-rb_node_t* rb_erase_all(rb_node_t* root) {
+void rb_erase_all(rb_node_t* root) {
 	if (root == NULL) {
 		return;
 	}
