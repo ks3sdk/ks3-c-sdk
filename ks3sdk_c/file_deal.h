@@ -8,7 +8,7 @@ extern "C" {
 
 #include <stdio.h>
 #include <string.h>
-#include <curl/curl.h>
+#include "curl/curl.h"
 #include "buffer.h"
 
 static size_t read_s3_string_data(void *ptr, size_t size,
