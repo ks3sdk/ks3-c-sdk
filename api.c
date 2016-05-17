@@ -67,6 +67,17 @@ buffer* download_file_object(const char* host,
 	return resp;
 }
 
+buffer* upload_buf_object(const char* host, const char* bucket,
+	const char* object_key, const char* buf_content,
+	const char* access_key, const char* secret_key,
+	const char* query_args, const char* headers, int* err) {
+	buffer* resp = NULL;
+	resp = buffer_init();
+	make_header_buf(host, PUT_METHOD, bucket, object_key, buf_content,
+		query_args, headers, access_key, secret_key, resp, err);
+	return resp;
+}
+
 buffer* delete_object(const char* host,
 	const char* bucket, const char* object_key,
 	const char* access_key, const char* secret_key,

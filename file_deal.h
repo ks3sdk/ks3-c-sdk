@@ -11,6 +11,12 @@ extern "C" {
 #include "curl/curl.h"
 #include "buffer.h"
 
+typedef struct {
+	const char* data;
+	int32_t offset;
+	int32_t len;
+} BufData;
+
 static size_t read_s3_string_data(void *ptr, size_t size,
         size_t nmemb, void *stream);
 static size_t read_s3_response(void *ptr, size_t size,
@@ -26,6 +32,7 @@ static void file_deal_up(void *handler, FILE* file, curl_off_t size, buffer* res
 static void file_deal_down(void *handler, FILE* file, buffer* resp);
 extern void file_down(void *handler, FILE* file, buffer* resp);
 extern void file_up(void *handler, FILE* file, curl_off_t size, buffer* resp);
+extern void buf_up(void *handler, BufData* buf_data, curl_off_t size, buffer* resp);
 
 #ifdef __cplusplus
 }

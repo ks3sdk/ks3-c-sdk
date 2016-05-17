@@ -90,13 +90,43 @@ static void parse_http_header(CURL* handler, buffer* resp) {
     strcat(resp->status_msg, sec_space + 1);
 }
 
+FILE* up_file_preprocess(MethodType method_type, const char* data,
+	CURL* handler, buffer* resp) {
+	FILE* file = NULL;
+	size_t file_size;
+	if (method_type == PUT_METHOD) {
+		file = fopen(data, "rb");
+		if (file == NULL) {
+			return file;
+		}
+		fseek(file, 0, SEEK_END);
+		file_size = ftell(file);
+		fseek(file, 0, SEEK_SET);
+		file_up(handler, file, file_size, resp);
+	} else if (method_type == GET_METHOD) {
+		file = fopen(data, "wb");
+		if (file == NULL) {
+			return file;
+		}
+		file_down(handler, file, resp);
+	}
+	return file;
+}
+void* up_buf_preprocess(MethodType method_type, BufData* data,
+	CURL* handler, buffer* resp) {
+	if (method_type == PUT_METHOD) {
+		buf_up(handler, data, data->len, resp);
+	} else if (method_type == GET_METHOD) {
+		// TODO
+	}
+}
+
 static int make_header_common(const char* host, MethodType method_type,
 	const char* bucket, const char* object, const char* data,
 	const char* query_args, const char* headers, OpType op_type,
 	const char* access_key, const char* secret_key, buffer* resp) {
 	
 	FILE *file = NULL;
-	size_t file_size;
 	char origin_sign[1024] = { '\0' };
 	char url[1024] = { '\0' };
 	char auth[1024] = { '\0' };
@@ -139,25 +169,18 @@ static int make_header_common(const char* host, MethodType method_type,
     set_method(method_type, handler);
     curl_easy_setopt(handler, CURLOPT_HTTPHEADER, http_header);
 	// 7. curl perform
+	BufData buf_data;
 	do {
 		if (op_type == FILE_OP) {
-			if (method_type == PUT_METHOD) {
-				file = fopen(data, "rb");
-				if (file == NULL) {
-					break;
-				}
-				fseek(file, 0, SEEK_END);
-				file_size = ftell(file);
-				fseek(file, 0, SEEK_SET);
-				file_up(handler, file, file_size, resp);
+			file = up_file_preprocess(method_type, data, handler, resp);
+			if (file == NULL) {
+				break;
 			}
-			if (method_type == GET_METHOD) {
-				file = fopen(data, "wb");
-				if (file == NULL) {
-					break;
-				}
-				file_down(handler, file, resp);
-			}
+		} else if (op_type == BUF_OP) {
+			buf_data.data = data;
+			buf_data.offset = 0;
+			buf_data.len = strlen(data);
+			up_buf_preprocess(method_type, &buf_data, handler, resp);
 		} else {
 			meta_deal(handler, NULL, resp, 0);
 		}
@@ -191,4 +214,12 @@ void make_header_file(const char* host, MethodType method_type, const char* buck
 	buffer* resp, int* err) {
 	*err = make_header_common(host, method_type, bucket, object,
 		filename, query_args, headers, FILE_OP, access_key, secret_key, resp);
+}
+
+void make_header_buf(const char* host, MethodType method_type, const char* bucket,
+	const char* object, const char* content, const char* query_args,
+	const char* headers, const char* access_key, const char* secret_key,
+	buffer* resp, int* err) {
+	*err = make_header_common(host, method_type, bucket, object,
+		content, query_args, headers, BUF_OP, access_key, secret_key, resp);
 }

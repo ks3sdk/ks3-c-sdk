@@ -11,7 +11,8 @@ extern "C" {
 
 typedef enum {
     META_OP = 0,
-    FILE_OP
+    FILE_OP,
+    BUF_OP
 } OpType;
 
 typedef enum {
@@ -35,6 +36,10 @@ extern void make_header(const char* host, MethodType method_type,
 	const char* secret_key, buffer* resp, int* err);
 extern void make_header_file(const char* host, MethodType method_type,
 	const char* bucket, const char* object, const char* filename,
+	const char* query_args, const char* headers, const char* access_key,
+	const char* secret_key, buffer* resp, int* err);
+extern void make_header_buf(const char* host, MethodType method_type,
+	const char* bucket, const char* object, const char* content,
 	const char* query_args, const char* headers, const char* access_key,
 	const char* secret_key, buffer* resp, int* err);
 

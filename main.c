@@ -1,23 +1,27 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "api.h"
 
 void api_test_bucket_relative();
 void api_test_object_relative();
+void api_test_buf_relative();
+
+char* id = "S1guCl0KF/oA285zzEDK";
+char* key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
 
 int main()
 {
 	api_test_bucket_relative();
 	api_test_object_relative();
+	api_test_buf_relative();
 	
-	system("pause");
+	//system("pause");
 	return 0;
 }
 
 void api_test_bucket_relative() {
-	char* id = "S1guCl0KF/oA285zzEDK";
-    char* key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
 	char* bucket = "win-c-bucket1";	
 	const char* host = "kss.ksyun.com"; // hz
 	//const char* host = "ks3-cn-beijing.ksyun.com"; // bj host
@@ -104,8 +108,6 @@ void api_test_bucket_relative() {
 }
 
 void api_test_object_relative() {
-	char* id = "S1guCl0KF/oA285zzEDK";
-    char* key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
 	char* filename = "./localfile";
 	char* save = "./test_save.log";
 	const char* host = "kss.ksyun.com"; // hz
@@ -233,4 +235,53 @@ void api_test_object_relative() {
 	buffer_free(resp);
 	printf("after list object\n");
 	
+}
+
+void api_test_buf_relative() {
+	char* save = "./test_save.log";
+	const char* host = "kss.ksyun.com"; // hz
+
+	//"location=adsf&lifecycle=qwe&acl=123&website=123&website=435";
+	char* query_args = "";
+	buffer* resp;
+	int error;
+
+    char* choice = "abcdefgh";
+	char* content = (char *)malloc (512000);
+	memset(content, '\0', 512000);
+	int i = 0; 
+	for (; i < 512000; i++) {
+		*(content + i) = *(choice + (i % 8));
+//		printf(",cur char=%c", *(choice + (i % 8)));
+	}
+	printf("\nbefore upload buf object\n");
+	resp = upload_buf_object(host, "c-bucket1",
+		"win32/buf_object1", content, id, key, query_args, NULL, &error);
+	if (error != 0) {
+		printf("curl err=%d\n", error);
+	} else {
+		printf("status code=%d\n", resp->status_code);
+		printf("status msg=%s\n", resp->status_msg);
+		if (resp->body != NULL) {
+			printf("error msg=%s\n", resp->body);
+		}
+	}
+	
+	buffer_free(resp);
+
+	printf("\nbefore upload buf object by file\n");
+	FILE *stream;
+	char buf[450462] = { '\0' };
+	if ((stream = fopen("./tmp", "w+"))	== NULL) {
+		fprintf(stderr,
+				"Cannot open output file.\n");
+		return 1;
+	}
+	/* seek to the beginning of the file */
+	fseek(stream, SEEK_SET, 0);
+	/* read the data and display it */
+	fread(buf, 1, 450462, stream);
+	printf("%s\n", buf);
+	fclose(stream);
+	return 0;
 }
