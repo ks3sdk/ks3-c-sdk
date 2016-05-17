@@ -26,7 +26,7 @@ static char* compute(const char* sign, const char* secret_key, char* b64);
 static char* make_url(const char* host, const char* bucket_name,
 	const char* object, const char* query_args, char* url);
 static int make_header_common(const char* host, MethodType method_type,
-	const char* bucket, const char* object, const char* data,
+	const char* bucket, const char* object, const char* data, int data_len,
 	const char* query_args, const char* headers, OpType op_type,
 	const char* access_key, const char* secret_key, buffer* resp);
 
@@ -39,7 +39,7 @@ extern void make_header_file(const char* host, MethodType method_type,
 	const char* query_args, const char* headers, const char* access_key,
 	const char* secret_key, buffer* resp, int* err);
 extern void make_header_buf(const char* host, MethodType method_type,
-	const char* bucket, const char* object, const char* content,
+	const char* bucket, const char* object, const char* content, int buf_len,
 	const char* query_args, const char* headers, const char* access_key,
 	const char* secret_key, buffer* resp, int* err);
 

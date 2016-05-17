@@ -122,7 +122,7 @@ void* up_buf_preprocess(MethodType method_type, BufData* data,
 }
 
 static int make_header_common(const char* host, MethodType method_type,
-	const char* bucket, const char* object, const char* data,
+	const char* bucket, const char* object, const char* data, int buf_len,
 	const char* query_args, const char* headers, OpType op_type,
 	const char* access_key, const char* secret_key, buffer* resp) {
 	
@@ -179,7 +179,7 @@ static int make_header_common(const char* host, MethodType method_type,
 		} else if (op_type == BUF_OP) {
 			buf_data.data = data;
 			buf_data.offset = 0;
-			buf_data.len = strlen(data);
+			buf_data.len = buf_len;
 			up_buf_preprocess(method_type, &buf_data, handler, resp);
 		} else {
 			meta_deal(handler, NULL, resp, 0);
@@ -205,7 +205,7 @@ void make_header(const char* host, MethodType method_type, const char* bucket,
 	const char* headers, const char* access_key, const char* secret_key,
 	buffer* resp, int* err) {
 	*err = make_header_common(host, method_type, bucket, object,
-		filename, query_args, headers, META_OP, access_key, secret_key, resp);
+		filename, -1, query_args, headers, META_OP, access_key, secret_key, resp);
 }
 
 void make_header_file(const char* host, MethodType method_type, const char* bucket,
@@ -213,13 +213,13 @@ void make_header_file(const char* host, MethodType method_type, const char* buck
 	const char* headers, const char* access_key, const char* secret_key,
 	buffer* resp, int* err) {
 	*err = make_header_common(host, method_type, bucket, object,
-		filename, query_args, headers, FILE_OP, access_key, secret_key, resp);
+		filename, -1, query_args, headers, FILE_OP, access_key, secret_key, resp);
 }
 
 void make_header_buf(const char* host, MethodType method_type, const char* bucket,
-	const char* object, const char* content, const char* query_args,
+	const char* object, const char* buf, int buf_len, const char* query_args,
 	const char* headers, const char* access_key, const char* secret_key,
 	buffer* resp, int* err) {
 	*err = make_header_common(host, method_type, bucket, object,
-		content, query_args, headers, BUF_OP, access_key, secret_key, resp);
+		buf, buf_len, query_args, headers, BUF_OP, access_key, secret_key, resp);
 }

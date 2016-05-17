@@ -255,8 +255,8 @@ void api_test_buf_relative() {
 //		printf(",cur char=%c", *(choice + (i % 8)));
 	}
 	printf("\nbefore upload buf object\n");
-	resp = upload_buf_object(host, "c-bucket1",
-		"win32/buf_object1", content, id, key, query_args, NULL, &error);
+	resp = upload_object(host, "c-bucket1",
+		"win32/buf_object1", content, 512000, id, key, query_args, NULL, &error);
 	if (error != 0) {
 		printf("curl err=%d\n", error);
 	} else {
@@ -267,21 +267,48 @@ void api_test_buf_relative() {
 		}
 	}
 	
+	free(content);
 	buffer_free(resp);
 
 	printf("\nbefore upload buf object by file\n");
 	FILE *stream;
-	char buf[450462] = { '\0' };
-	if ((stream = fopen("./tmp", "w+"))	== NULL) {
+	char* buf = (char*) malloc (20480702);
+	if ((stream = fopen("./tmp", "r"))	== NULL) {
 		fprintf(stderr,
 				"Cannot open output file.\n");
-		return 1;
+		return;
 	}
-	/* seek to the beginning of the file */
-	fseek(stream, SEEK_SET, 0);
 	/* read the data and display it */
-	fread(buf, 1, 450462, stream);
-	printf("%s\n", buf);
+	size_t rlen = fread(buf, 1, 20480702, stream);
+	printf("read len=%d, buf len=%d\n", rlen, strlen(buf));
 	fclose(stream);
-	return 0;
+
+	resp = upload_object(host, "c-bucket1",
+		"win32/buf_object_file2", buf, 20480702, id, key, query_args, NULL, &error);
+	if (error != 0) {
+		printf("curl err=%d\n", error);
+	} else {
+		printf("status code=%d\n", resp->status_code);
+		printf("status msg=%s\n", resp->status_msg);
+		if (resp->body != NULL) {
+			printf("error msg=%s\n", resp->body);
+		}
+	}
+	free(buf);
+	buffer_free(resp);
+
+	printf("before download file object\n");
+	resp = download_file_object(host, "c-bucket1",
+		"win32/buf_object_file2", save, id, key, NULL, &error);
+	if (error != 0) {
+		printf("curl err=%d\n", error);
+	} else {
+		printf("status code=%d\n", resp->status_code);
+		printf("status msg=%s\n", resp->status_msg);
+		if (resp->body != NULL) {
+			printf("error msg=%s\n", resp->body);
+		}
+	}
+	buffer_free(resp);
+	printf("after download file object\n");
 }

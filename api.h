@@ -29,8 +29,8 @@ extern buffer* download_file_object(const char* host,
 	const char* bucket, const char*object_key,
 	const char* filename, const char* access_key,
 	const char* secret_key, const char* query_args, int* err);
-extern buffer* upload_buf_object(const char* host, const char* bucket,
-	const char* object_key, const char* buf_content,
+extern buffer* upload_object(const char* host, const char* bucket,
+	const char* object_key, const char* buf_data, int buf_len,
 	const char* access_key, const char* secret_key,
 	const char* query_args, const char* headers, int* err);
 
