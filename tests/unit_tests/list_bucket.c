@@ -3,6 +3,7 @@
 #include <string.h>
 #include "CUnit/Basic.h"
 #include "api.h"
+#include "./load_key.h"
 
 /* The suite initialization function.
  * Opens the temporary file used by the tests.
@@ -26,9 +27,7 @@ void TEST_LIST_ALL_BUCKETS(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
-    resp = list_all_bucket(host, access_key, secret_key, &error);
+    resp = list_all_bucket(host, ak, sk, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     buffer_free(resp);
@@ -37,10 +36,8 @@ void TEST_LIST_ALL_BUCKETS(void) {
 void TEST_LIST_BUCKET_AK_INVALID() {
     int error;
     buffer* resp = NULL;
-
     const char* access_key = "S1guCl0KF/oA2xxxxxxxxxx";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
-    resp = list_all_bucket(host, access_key, secret_key, &error);
+    resp = list_all_bucket(host, access_key, sk, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(403 == resp->status_code);
     printf("status msg=%s\n", resp->status_msg);
@@ -52,11 +49,11 @@ void TEST_LIST_BUCKET_SK_INVALID() {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
     const char* secret_key = "DGSTgVMQ08EepL3CanUoaxxxxxxxxxxxxxxxxxxxxxxx";
-    resp = list_all_bucket(host, access_key, secret_key, &error);
+    resp = list_all_bucket(host, ak, secret_key, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(403 == resp->status_code);
+    printf("status code=%d\n", resp->status_code);
     printf("status msg=%s\n", resp->status_msg);
     printf("error msg=%s\n", resp->body);
     buffer_free(resp);
@@ -67,6 +64,11 @@ void TEST_LIST_BUCKET_SK_INVALID() {
  * CUnit error code on failure.
  * */
 int main() {
+    int ret = load_ak_sk();
+    if (ret != 0) {
+        printf("[ERROR] load ak, sk failed\n");
+        return ret;
+    }
     CU_pSuite pSuite = NULL;
 
     /* initialize the CUnit test registry */

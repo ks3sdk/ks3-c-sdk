@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "api.h"
 #include "CUnit/Basic.h"
+#include "./load_key.h"
 
 
 int init_suite1() {
@@ -19,19 +20,17 @@ void TEST_CREATE_BUCKET(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "unit-test-create-bucket1";
 
     resp = create_bucket(host, bucket,
-            access_key, secret_key, NULL, &error);
+            ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     buffer_free(resp);
 
     // delete bucket finally
     resp = delete_bucket(host, bucket,
-            access_key, secret_key, NULL, &error);
+            ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
     buffer_free(resp);
@@ -41,25 +40,23 @@ void TEST_CREATE_BUCKET_EXIST(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "unit-test-create-bucket-exist";
 
     resp = create_bucket(host, bucket,
-            access_key, secret_key, NULL, &error);
+            ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     buffer_free(resp);
 
     resp = create_bucket(host, bucket,
-            access_key, secret_key, NULL, &error);
+            ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(409 == resp->status_code);
     buffer_free(resp);
 
     // delete bucket finally
     resp = delete_bucket(host, bucket,
-            access_key, secret_key, NULL, &error);
+            ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
     buffer_free(resp);
@@ -70,6 +67,11 @@ void TEST_CREATE_BUCKET_EXIST(void) {
  * CUnit error code on failure.
  * */
 int main() {
+    int ret = load_ak_sk();
+    if (ret != 0) {
+        printf("[ERROR] load ak, sk failed\n");
+        return ret;
+    }
     CU_pSuite pSuite = NULL;
 
     /* initialize the CUnit test registry */

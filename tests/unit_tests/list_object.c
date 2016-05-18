@@ -3,6 +3,7 @@
 #include <string.h>
 #include "CUnit/Basic.h"
 #include "api.h"
+#include "./load_key.h"
 
 /* The suite initialization function.
  * Opens the temporary file used by the tests.
@@ -26,10 +27,8 @@ void TEST_LIST_OBJECT(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "c-bucket1";
-    resp = list_bucket_objects(host, bucket, access_key, secret_key, NULL, &error);
+    resp = list_bucket_objects(host, bucket, ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     buffer_free(resp);
@@ -39,10 +38,8 @@ void TEST_LIST_OBJECT_BUCKET_NOT_EXIST(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "bucket-not-exist1";
-    resp = list_bucket_objects(host, bucket, access_key, secret_key, NULL, &error);
+    resp = list_bucket_objects(host, bucket, ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     printf("status msg=%s\n", resp->status_msg);
@@ -55,9 +52,8 @@ void TEST_LIST_OBJECT_AK_INVALID() {
     buffer* resp = NULL;
 
     const char* access_key = "S1guCl0KF/oA2xxxxxxxxxx";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "c-bucket1";
-    resp = list_bucket_objects(host, bucket, access_key, secret_key, NULL, &error);
+    resp = list_bucket_objects(host, bucket, access_key, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(403 == resp->status_code);
     printf("status msg=%s\n", resp->status_msg);
@@ -69,10 +65,9 @@ void TEST_LIST_OBJECT_SK_INVALID() {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
     const char* secret_key = "DGSTgVMQ08EepL3CanUoaxxxxxxxxxxxxxxxxxxxxxxx";
     const char* bucket = "c-bucket1";
-    resp = list_bucket_objects(host, bucket, access_key, secret_key, NULL, &error);
+    resp = list_bucket_objects(host, bucket, ak, secret_key, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(403 == resp->status_code);
     printf("status msg=%s\n", resp->status_msg);
@@ -85,6 +80,11 @@ void TEST_LIST_OBJECT_SK_INVALID() {
  * CUnit error code on failure.
  * */
 int main() {
+    int ret = load_ak_sk();
+    if (ret != 0) {
+        printf("[ERROR] load ak, sk failed\n");
+        return ret;
+    }
     CU_pSuite pSuite = NULL;
 
     /* initialize the CUnit test registry */

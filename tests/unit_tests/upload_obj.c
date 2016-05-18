@@ -3,6 +3,7 @@
 #include <string.h>
 #include "CUnit/Basic.h"
 #include "api.h"
+#include "./load_key.h"
 
 /* The suite initialization function.
  * Opens the temporary file used by the tests.
@@ -26,14 +27,12 @@ void TEST_UPLOAD_OBJECT(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "c-bucket1";
 
     const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::xxxx";
     const char* filename = "./lib/libcunit.a";
     resp = upload_file_object(host, bucket, obj_key, filename,
-            access_key, secret_key, NULL, NULL, &error);
+            ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {
@@ -48,14 +47,12 @@ void TEST_UPLOAD_OBJECT_EXIST(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "c-bucket1";
 
     const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::exist";
     const char* filename = "./example.c";
     resp = upload_file_object(host, bucket, obj_key, filename,
-            access_key, secret_key, NULL, NULL, &error);
+            ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {
@@ -66,7 +63,7 @@ void TEST_UPLOAD_OBJECT_EXIST(void) {
     buffer_free(resp);
 
     resp = upload_file_object(host, bucket, obj_key, filename,
-            access_key, secret_key, NULL, NULL, &error);
+            ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {
@@ -81,8 +78,6 @@ void TEST_UPLOAD_OBJECT_WITH_CALLBACK(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "c-bucket1";
 
     const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::callback";
@@ -90,7 +85,7 @@ void TEST_UPLOAD_OBJECT_WITH_CALLBACK(void) {
     const char* headers = "x-kss-callbackurl:http://10.4.2.38:19090/";
 
     resp = upload_file_object(host, bucket, obj_key, filename,
-            access_key, secret_key, NULL, headers, &error);
+            ak, sk, NULL, headers, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {
@@ -105,8 +100,6 @@ void TEST_UPLOAD_OBJECT_WITH_HEADERS(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "c-bucket1";
 
     const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::header:callback:content-type";
@@ -114,7 +107,7 @@ void TEST_UPLOAD_OBJECT_WITH_HEADERS(void) {
     const char* headers = "Content-Type:text\nx-kss-callbackurl:http://10.4.2.38:19090/";
 
     resp = upload_file_object(host, bucket, obj_key, filename,
-            access_key, secret_key, NULL, headers, &error);
+            ak, sk, NULL, headers, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {
@@ -129,8 +122,6 @@ void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "c-bucket1";
 
     const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::header:callback:content-type";
@@ -138,7 +129,7 @@ void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
     const char* headers = "Content-Type :text\nx-kss-callbackurl:http://10.4.2.38:19090/";
 
     resp = upload_file_object(host, bucket, obj_key, filename,
-            access_key, secret_key, NULL, headers, &error);
+            ak, sk, NULL, headers, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {
@@ -150,7 +141,7 @@ void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
 
     headers = "Content-Type: text\nx-kss-callbackurl:http://10.4.2.38:19090/";
     resp = upload_file_object(host, bucket, obj_key, filename,
-            access_key, secret_key, NULL, headers, &error);
+            ak, sk, NULL, headers, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {
@@ -162,7 +153,7 @@ void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
 
     headers = "Content-Type : text\nx-kss-callbackurl:http://10.4.2.38:19090/";
     resp = upload_file_object(host, bucket, obj_key, filename,
-            access_key, secret_key, NULL, headers, &error);
+            ak, sk, NULL, headers, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {
@@ -178,6 +169,11 @@ void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
  * CUnit error code on failure.
  * */
 int main() {
+    int ret = load_ak_sk();
+    if (ret != 0) {
+        printf("[ERROR] load ak, sk failed\n");
+        return ret;
+    }
     CU_pSuite pSuite = NULL;
 
     /* initialize the CUnit test registry */

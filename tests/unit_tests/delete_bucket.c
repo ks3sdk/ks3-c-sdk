@@ -3,6 +3,7 @@
 #include <string.h>
 #include "CUnit/Basic.h"
 #include "api.h"
+#include "./load_key.h"
 
 /* The suite initialization function.
  * Opens the temporary file used by the tests.
@@ -26,19 +27,17 @@ void TEST_DELETE_BUCKET(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "unit-test-delete-bucket1";
 
     resp = create_bucket(host, bucket,
-            access_key, secret_key, NULL, &error);
+            ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     buffer_free(resp);
 
     // delete bucket finally
     resp = delete_bucket(host, bucket,
-            access_key, secret_key, NULL, &error);
+            ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
     buffer_free(resp);
@@ -48,12 +47,10 @@ void TEST_DELETE_BUCKET_NOT_EXIST(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* access_key = "S1guCl0KF/oA285zzEDK";
-    const char* secret_key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
     const char* bucket = "unit-test-delete-bucket-exist";
 
     resp = delete_bucket(host, bucket,
-            access_key, secret_key, NULL, &error);
+            ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     buffer_free(resp);
@@ -64,6 +61,11 @@ void TEST_DELETE_BUCKET_NOT_EXIST(void) {
  * CUnit error code on failure.
  * */
 int main() {
+    int ret = load_ak_sk();
+    if (ret != 0) {
+        printf("[ERROR] load ak, sk failed\n");
+        return ret;
+    }
     CU_pSuite pSuite = NULL;
 
     /* initialize the CUnit test registry */
