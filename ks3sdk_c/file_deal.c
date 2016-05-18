@@ -111,3 +111,36 @@ void file_up(void *handler, FILE* file, curl_off_t size, buffer* resp) {
 void file_down(void *handler, FILE* file, buffer* resp) {
     file_deal_down(handler, file, resp);
 }
+
+static size_t read_buf(void *ptr, size_t size, size_t nmemb, void *buf) {
+	BufData* buf_data = (BufData *) buf;
+	if (buf_data->offset >= buf_data->len) {
+		return 0;
+	}
+	int32_t to_read_len = nmemb * size;
+	int32_t remain_len = buf_data->len - buf_data->offset;
+	if (to_read_len > remain_len) {
+		to_read_len = remain_len;
+	}
+	memcpy(ptr, buf_data->data + buf_data->offset, to_read_len);
+	buf_data->offset += to_read_len;
+	return to_read_len;
+}
+
+void buf_up(void *handler, BufData* buf_data, curl_off_t size, buffer* resp) {
+    // set conn time and transfer time
+    curl_easy_setopt(handler, CURLOPT_CONNECTTIMEOUT, 10 * 1000);
+    curl_easy_setopt(handler, CURLOPT_TIMEOUT_MS, 20 * 60 * 1000);
+    // set read function and file
+    curl_easy_setopt(handler, CURLOPT_READFUNCTION, read_buf);
+    curl_easy_setopt(handler, CURLOPT_READDATA, buf_data);
+
+    curl_easy_setopt(handler, CURLOPT_INFILE, buf_data);
+    curl_easy_setopt(handler, CURLOPT_INFILESIZE_LARGE, size);
+    // read header
+    curl_easy_setopt(handler, CURLOPT_HEADERFUNCTION, read_http_header_resp);
+    curl_easy_setopt(handler, CURLOPT_HEADERDATA, resp);
+    // read body
+    curl_easy_setopt(handler, CURLOPT_WRITEFUNCTION, read_s3_response);
+    curl_easy_setopt(handler, CURLOPT_WRITEDATA, resp);
+}

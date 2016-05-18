@@ -21,7 +21,8 @@ class Ks3Uploader : public Ks3Presser {
 public:
     Ks3Uploader() {}
     void HandleFile(const string& local_file,
-            const string& object_key, int32_t size);
+            const string& object_key, int32_t size,
+            const string& relative_path);
 };
 
 }  // end of namespace test

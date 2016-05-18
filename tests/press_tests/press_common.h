@@ -26,7 +26,7 @@ public:
     Ks3Presser() {}
 
     void Init(const Ks3ApiInfo& ks3_api_info,
-            const string& src_dir, int seq);
+            const string& src_dir, int seq, CountDownLatch* latch);
     void Run(CThread * thread, void * arg);
     int Start() {
         thread_.Start(this, NULL);
@@ -35,7 +35,8 @@ public:
         thread_.Join();
     }
     virtual void HandleFile(const string& local_file,
-            const string& object_key, int32_t size) = 0;
+            const string& object_key, int32_t size,
+            const string& relative_path) = 0;
 private:
     void WalkDir(const string& dir, int depth);
 
@@ -46,6 +47,7 @@ protected:
 private:
     string src_dir_;
     CThread thread_;
+    CountDownLatch* latch_;
 };
 
 }  // end of namespace test

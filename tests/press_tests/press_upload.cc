@@ -11,7 +11,8 @@ namespace test
 using pandora::TimeUtil;
 
 void Ks3Uploader::HandleFile(const string& localfile,
-        const string& object_key, int32_t size) {
+        const string& object_key, int32_t size,
+        const string& relative_path) {
     //printf("will upload file=%s, obj_key=%s\n",
     //        localfile.c_str(), object_key.c_str());
     int curl_err;

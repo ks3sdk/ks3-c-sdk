@@ -13,17 +13,19 @@ namespace test
 {
 
 void Ks3Presser::Init(const Ks3ApiInfo& ks3_api_info,
-        const string& src_dir, int seq) {
+        const string& src_dir, int seq, CountDownLatch* latch) {
     ks3_api_info_.host = ks3_api_info.host;
     ks3_api_info_.bucket = ks3_api_info.bucket;
     ks3_api_info_.access_key = ks3_api_info.access_key;
     ks3_api_info_.secret_key = ks3_api_info.secret_key;
     src_dir_ = src_dir;
     seq_ = seq;
+    latch_ = latch;
 }
 
 void Ks3Presser::Run(CThread* thread, void* arg) {
     WalkDir(src_dir_, 0);
+    latch_->CountDown();
 }
 
 void Ks3Presser::WalkDir(const string& src_dir, int depth) {
@@ -48,14 +50,14 @@ void Ks3Presser::WalkDir(const string& src_dir, int depth) {
                     || strcmp("..", entry->d_name) == 0) {
                 continue;
             }
-            printf("seq=%d, %*s%s/\n", seq_, depth, "", entry->d_name);
+            printf("seq=%d, dir=%*s%s/\n", seq_, depth, "", entry->d_name);
             string child_dir = src_dir + "/" + entry->d_name;
             WalkDir(child_dir, depth + 4);
         } else {
-            printf("seq=%d, %*s%s\n", seq_, depth, "", entry->d_name);
+            printf("seq=%d, file=%*s%s\n", seq_, depth, "", entry->d_name);
             char object_key[100];
             sprintf(object_key, "ks3_c_sdk_dir_144_%d/%s", seq_, entry->d_name);
-            HandleFile(localfile, object_key, stat_buf.st_size);
+            HandleFile(localfile, object_key, stat_buf.st_size, entry->d_name);
         }
     }
     // 3. change work dir

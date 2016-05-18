@@ -1,5 +1,5 @@
 
-#include "press_download.h"
+#include "press_delete.h"
 #include "pandora/time_util.h"
 #include "api.h"
 
@@ -10,32 +10,30 @@ namespace test
 
 using pandora::TimeUtil;
 
-void Ks3Downloader::HandleFile(const string& local_file,
+void Ks3Deleter::HandleFile(const string& localfile,
         const string& object_key, int32_t size,
         const string& relative_path) {
-    //printf("will download file=%s, obj_key=%s\n",
+    //printf("will upload file=%s, obj_key=%s\n",
     //        localfile.c_str(), object_key.c_str());
     int curl_err;
     int64_t t1 = TimeUtil::GetTime();
-    char save_file[100] = { '\0' };
-    sprintf(save_file, "./%s_save_%d", relative_path.c_str(), seq_);
-    buffer* resp = download_file_object(ks3_api_info_.host.c_str(),
+    buffer* resp = delete_object(ks3_api_info_.host.c_str(),
             ks3_api_info_.bucket.c_str(), object_key.c_str(),
-            save_file, ks3_api_info_.access_key.c_str(),
+            ks3_api_info_.access_key.c_str(),
             ks3_api_info_.secret_key.c_str(), NULL, &curl_err);
     int64_t t2 = TimeUtil::GetTime();
     if (curl_err != 0) {
         printf("[FAIL]seq=%d, network failure, file=%s, error=%d, ut=%ld us\n",
-                seq_, local_file.c_str(), curl_err, (t2 - t1));
+                seq_, localfile.c_str(), curl_err, (t2 - t1));
         return;
     }
-    if (resp->status_code != 200) {
+    if (resp->status_code != 204) {
         printf("[FAIL]seq=%d, file=%s, status code=%d, status msg=%s, ut=%ld us\n",
-                seq_, local_file.c_str(), resp->status_code, resp->status_msg, (t2 - t1));
+                seq_, localfile.c_str(), resp->status_code, resp->status_msg, (t2 - t1));
         return;
     }
-    printf("[OK], seq=%d, file=%s, save_file=%s, size=%d, ut=%ld us\n", seq_,
-            local_file.c_str(), save_file, size, (t2 - t1));
+    printf("[OK], seq=%d, object=%s, size=%d, ut=%ld us\n", seq_,
+            object_key.c_str(), size, (t2 - t1));
     buffer_free(resp);
 }
 
