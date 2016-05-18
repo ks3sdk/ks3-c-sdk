@@ -39,6 +39,12 @@ extern buffer* delete_object(const char* host,
 	const char* access_key, const char* secret_key,
 	const char* query_args, int* err);
 
+extern buffer* copy_object(const char* host, const char* src_bucket,
+        const char* src_object_key, const char* dst_bucket,
+        const char* dst_object_key, const char* access_key,
+        const char* secret_key, const char* query_args,
+        const char* headers, int* err);
+
 #ifdef __cplusplus
 }
 #endif

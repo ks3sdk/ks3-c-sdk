@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "api.h"
 #include "make_header.h"
 #include "buffer.h"
@@ -86,5 +87,32 @@ buffer* delete_object(const char* host,
 	resp = buffer_init();
 	make_header(host, DELETE_METHOD, bucket, object_key, NULL,
 		query_args, NULL, access_key, secret_key, resp, err);
+	return resp;
+}
+
+buffer* copy_object(const char* host, const char* src_bucket,
+   const char* src_object_key, const char* dst_bucket,
+   const char* dst_object_key, const char* access_key,
+   const char* secret_key, const char* query_args,
+   const char* headers, int* err) {
+	buffer* resp = NULL;
+	resp = buffer_init();
+	char actual_header[1024] = { '\0' };
+	if (headers != NULL) {
+	    strcat(actual_header, headers);
+	    strcat(actual_header, "\n");
+	}
+	char src_header[200] = { '\0' };
+	strcat(src_header, "x-kss-copy-source: /");
+	if (src_bucket != NULL) {
+	    strcat(src_header, src_bucket);
+	    strcat(src_header, "/");
+	}
+	if (src_object_key != NULL) {
+	    strcat(src_header, src_object_key);
+	}
+	strcat(actual_header, src_header);
+	make_header(host, PUT_METHOD, dst_bucket, dst_object_key,
+	        NULL, query_args, actual_header, access_key, secret_key, resp, err);
 	return resp;
 }

@@ -5,7 +5,7 @@ LIBS = -L ./lib -lcunit -L ../../lib -lks3sdk -lcurl
 SRCS := $(wildcard *.c)
 OBJS := $(patsubst %.c, %.o, ${SRCS})
 
-TARGET = list_object delete_bucket create_bucket upload_obj list_bucket delete_object example
+TARGET = list_object delete_bucket create_bucket upload_obj list_bucket delete_object example copy_object
 RM = rm -rf
 
 all:$(TARGET)
@@ -25,6 +25,10 @@ create_bucket.o:create_bucket.c
 walk_dir:walk_dir.o
 	$(CC) -o $@ $< $(CFLAGES) $(LIBS)
 walk_dir.o:walk_dir.c
+	$(CC) -c $(CFLAGES) $< -o $@
+copy_object:copy_object.o load_key.o
+	$(CC) -o $@ $^ $(CFLAGES) $(LIBS)
+copy_object.o:copy_object.c
 	$(CC) -c $(CFLAGES) $< -o $@
 upload_obj:upload_obj.o load_key.o
 	$(CC) -o $@ $^ $(CFLAGES) $(LIBS)
