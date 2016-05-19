@@ -56,6 +56,97 @@ void TEST_DEL_OBJ_NOT_EXIST(void) {
     buffer_free(resp);
 }
 
+void TEST_DEL_OBJ_WITH_BLANK_BUCKET_NAME(void) {
+    buffer* resp = NULL;
+    const char* s_bucket = NULL;
+    const char* obj_key = "not-exist-obj";
+    int error;
+    resp = delete_object(host, s_bucket, obj_key,
+            ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(405 == resp->status_code);
+    if (resp->status_code != 405) {
+        printf("\nstatus code=%d\n", resp->status_code);
+        printf("status msg=%s\n", resp->status_msg);
+    }
+    buffer_free(resp);
+}
+
+void TEST_DEL_OBJ_WITH_BLANK_OBJECT_NAME(void) {
+    buffer* resp = NULL;
+    const char* obj_key = NULL;
+    int error;
+    resp = delete_object(host, bucket, obj_key,
+            ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(409 == resp->status_code);
+    if (resp->status_code != 409) {
+        printf("\nstatus code=%d\n", resp->status_code);
+        printf("status msg=%s\n", resp->status_msg);
+    }
+    buffer_free(resp);
+}
+
+void TEST_DEL_OBJ_WITH_BLANK_BUCKET_NAME_AND_OBJECT_NAME(void) {
+    buffer* resp = NULL;
+    const char* s_bucket = NULL;
+    const char* obj_key = NULL;
+    int error;
+    resp = delete_object(host, s_bucket, obj_key,
+            ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(405 == resp->status_code);
+    if (resp->status_code != 405) {
+        printf("\nstatus code=%d\n", resp->status_code);
+        printf("status msg=%s\n", resp->status_msg);
+    }
+    buffer_free(resp);
+}
+
+void TEST_DEL_OBJ_WITH_BLANK_HOST_NAME_AND_BUCKET_NAME_AND_OBJECT_NAME(void) {
+    buffer* resp = NULL;
+    const char* s_host = NULL;
+    const char* s_bucket = NULL;
+    const char* obj_key = NULL;
+    int error;
+    resp = delete_object(s_host, s_bucket, obj_key,
+            ak, sk, NULL, &error);
+    CU_ASSERT(3 == error);
+    if (error != 3) {
+        printf("\ncurl error=%d\n", error);
+    }
+    buffer_free(resp);
+}
+
+void TEST_DEL_OBJ_WITH_BLANK_HOST_NAME_AND_BUCKET_NAME(void) {
+    buffer* resp = NULL;
+    const char* s_host = NULL;
+    const char* s_bucket = NULL;
+    const char* obj_key = "unit-test-delete-object/blank-host-bucket-name";
+    int error;
+    resp = delete_object(s_host, s_bucket, obj_key,
+            ak, sk, NULL, &error);
+    CU_ASSERT(3 == error);
+    if (error != 3) {
+        printf("\ncurl error=%d\n", error);
+    }
+    buffer_free(resp);
+}
+
+void TEST_DEL_OBJ_WITH_BLANK_HOST_NAME_AND_OBJECT_NAME(void) {
+    buffer* resp = NULL;
+    const char* s_host = NULL;
+    const char* obj_key = NULL;
+    int error;
+    resp = delete_object(s_host, bucket, obj_key,
+            ak, sk, NULL, &error);
+    CU_ASSERT(3 == error);
+    if (error != 3) {
+        printf("\ncurl error=%d\n", error);
+    }
+    buffer_free(resp);
+}
+
 /* The main() function for setting up and running the tests.
  * Returns a CUE_SUCCESS on successful running, another
  * CUnit error code on failure.
@@ -83,7 +174,19 @@ int main() {
     if (CU_add_test(pSuite, "test delete object\n",
                 TEST_DEL_OBJ) == NULL ||
             CU_add_test(pSuite, "test delete_object not exist\n",
-                TEST_DEL_OBJ_NOT_EXIST) == NULL) {
+                TEST_DEL_OBJ_NOT_EXIST) == NULL ||
+            CU_add_test(pSuite, "test delete_object with blank bucket name\n",
+                TEST_DEL_OBJ_WITH_BLANK_BUCKET_NAME) == NULL ||
+            CU_add_test(pSuite, "test delete_object with blank object name\n",
+                TEST_DEL_OBJ_WITH_BLANK_OBJECT_NAME) == NULL ||
+            CU_add_test(pSuite, "test delete_object with blank bucket name and object name\n",
+                TEST_DEL_OBJ_WITH_BLANK_BUCKET_NAME_AND_OBJECT_NAME) == NULL ||
+            CU_add_test(pSuite, "test delete_object with blank host name, bucket name and obj name\n",
+                TEST_DEL_OBJ_WITH_BLANK_HOST_NAME_AND_BUCKET_NAME_AND_OBJECT_NAME) == NULL ||
+            CU_add_test(pSuite, "test delete_object with blank host name and bucket name\n",
+                TEST_DEL_OBJ_WITH_BLANK_HOST_NAME_AND_BUCKET_NAME) == NULL ||
+            CU_add_test(pSuite, "test delete_object with blank host name and bucket name\n",
+                TEST_DEL_OBJ_WITH_BLANK_HOST_NAME_AND_OBJECT_NAME) == NULL) {
         CU_cleanup_registry();
         return CU_get_error();
     }

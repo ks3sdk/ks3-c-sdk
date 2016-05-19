@@ -31,7 +31,9 @@ static char* compute(const char* sign, const char* secret_key, char* b64) {
 
 static char* make_url(const char* host, const char* bucket_name,
 	const char* object, const char* query_args, char* url) {
-	strcat(url, host);
+	if (host != NULL) {
+	    strcat(url, host);
+	}
 	if (bucket_name != NULL) {
 		strcat(url, "/");
 		strcat(url, bucket_name);
@@ -54,7 +56,7 @@ static char* make_url(const char* host, const char* bucket_name,
 	return url;
 }
 
-static const char* HTTP = "HTTP";                                                                                     
+static const char* HTTP = "HTTP";
 static void parse_http_header(CURL* handler, buffer* resp) {
 	char* token = NULL;
 	char* out_ptr = NULL;
@@ -127,7 +129,6 @@ static int make_header_common(const char* host, MethodType method_type,
 	const char* access_key, const char* secret_key, buffer* resp) {
 	
 	FILE *file = NULL;
-	size_t file_size;
 	char origin_sign[1024] = { '\0' };
 	char url[1024] = { '\0' };
 	char auth[1024] = { '\0' };

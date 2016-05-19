@@ -56,6 +56,92 @@ void TEST_DELETE_BUCKET_NOT_EXIST(void) {
     buffer_free(resp);
 }
 
+void TEST_DELETE_BUCKET_NOT_EMPTY(void) {
+    int error;
+    buffer* resp = NULL;
+
+    const char* bucket = "unit-test-delete-bucket-not-empty";
+    // create bucket first
+    resp = create_bucket(host, bucket,
+            ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(200 == resp->status_code);
+    if (resp->status_code != 200) {
+        printf("create bucket status code = %ld\n", resp->status_code);
+        printf("create bucket status msg = %s\n", resp->status_msg);
+        printf("create bucket error msg = %s\n", resp->body);
+    }
+    buffer_free(resp);
+    sleep(3);
+
+    // upload object
+    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::xxxx";
+    const char* filename = "./lib/libcunit.a";
+    resp = upload_file_object(host, bucket, obj_key, filename,
+            ak, sk, NULL, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(200 == resp->status_code);
+    if (resp->status_code != 200) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    buffer_free(resp);
+
+    // delete bucket not empty
+    resp = delete_bucket(host, bucket, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(409 == resp->status_code);
+    if (resp->status_code != 409) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    buffer_free(resp);
+    sleep(3);
+
+    // delete object
+    resp = delete_object(host, bucket, obj_key, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(204 == resp->status_code);
+    if (resp->status_code != 204) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    buffer_free(resp);
+
+    // delete bucket finally
+    resp = delete_bucket(host, bucket,
+            ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(204 == resp->status_code);
+    if (resp->status_code != 204) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    buffer_free(resp);
+    sleep(3);
+}
+
+void TEST_DELETE_BUCKET_WITH_BLANK_NAME(void) {
+    int error;
+    buffer* resp = NULL;
+
+    const char* bucket = NULL;
+
+    resp = delete_bucket(host, bucket,
+            ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(405 == resp->status_code);
+    if (405 != resp->status_code) {
+        printf("\nstatus code=%d\n", resp->status_code);
+        printf("status msg=%s\n", resp->status_msg);
+    }
+    buffer_free(resp);
+}
+
 /* The main() function for setting up and running the tests.
  * Returns a CUE_SUCCESS on successful running, another
  * CUnit error code on failure.
@@ -83,7 +169,11 @@ int main() {
     if (CU_add_test(pSuite, "test delete bucket\n",
                 TEST_DELETE_BUCKET) == NULL ||
             CU_add_test(pSuite, "test delete bucket not exist\n",
-                TEST_DELETE_BUCKET_NOT_EXIST) == NULL) {
+                TEST_DELETE_BUCKET_NOT_EXIST) == NULL ||
+            CU_add_test(pSuite, "test delete bucket with blank name\n",
+                TEST_DELETE_BUCKET_WITH_BLANK_NAME) == NULL ||
+            CU_add_test(pSuite, "test delete bucket not empty\n",
+                TEST_DELETE_BUCKET_NOT_EMPTY) == NULL) {
         CU_cleanup_registry();
         return CU_get_error();
     }

@@ -59,6 +59,19 @@ void TEST_LIST_BUCKET_SK_INVALID() {
     buffer_free(resp);
 }
 
+void TEST_LIST_BUCKET_WITH_BLANK_HOST(void) {
+    int error;
+    buffer* resp = NULL;
+
+    const char* s_host = NULL;
+    resp = list_all_bucket(s_host, ak, sk, &error);
+    CU_ASSERT(3 == error);
+    if (error != 3) {
+        printf("\ncurl error=%d\n", error);
+    }
+    buffer_free(resp);
+}
+
 /* The main() function for setting up and running the tests.
  * Returns a CUE_SUCCESS on successful running, another
  * CUnit error code on failure.
@@ -83,9 +96,14 @@ int main() {
     }
 
     /* add the tests to the suite */
-    if (CU_add_test(pSuite, "test list all bucket\n", TEST_LIST_ALL_BUCKETS) == NULL
-          || CU_add_test(pSuite, "test list bucket with invalid ak\n", TEST_LIST_BUCKET_AK_INVALID) == NULL
-          || CU_add_test(pSuite, "test list bucket with invalid sk\n", TEST_LIST_BUCKET_SK_INVALID) == NULL) {
+    if (CU_add_test(pSuite, "test list all bucket\n",
+                TEST_LIST_ALL_BUCKETS) == NULL ||
+            CU_add_test(pSuite, "test list bucket with invalid ak\n",
+              TEST_LIST_BUCKET_AK_INVALID) == NULL ||
+            CU_add_test(pSuite, "test list bucket with invalid sk\n",
+                TEST_LIST_BUCKET_SK_INVALID) == NULL ||
+            CU_add_test(pSuite, "test list bucket with blank host\n",
+                TEST_LIST_BUCKET_WITH_BLANK_HOST) == NULL) {
         CU_cleanup_registry();
         return CU_get_error();
     }

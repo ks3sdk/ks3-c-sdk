@@ -102,7 +102,7 @@ buffer* copy_object(const char* host, const char* src_bucket,
 	    strcat(actual_header, headers);
 	    strcat(actual_header, "\n");
 	}
-	char src_header[200] = { '\0' };
+	char src_header[100] = { '\0' };
 	strcat(src_header, "x-kss-copy-source: /");
 	if (src_bucket != NULL) {
 	    strcat(src_header, src_bucket);

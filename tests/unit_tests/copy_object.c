@@ -51,9 +51,11 @@ void TEST_COPY_OBJECT_WITH_SAME_BUCKET(void) {
             dst_bucket, dst_obj_key, ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
-    printf("status code = %ld\n", resp->status_code);
-    printf("status msg = %s\n", resp->status_msg);
-    printf("error msg = %s\n", resp->body);
+    if (resp->status_code != 200) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
     buffer_free(resp);
 
     resp = delete_object(host, dst_bucket, dst_obj_key, ak, sk, NULL, &error);
@@ -105,7 +107,7 @@ void TEST_COPY_OBJECT_WITH_SAME_BUCKET_AND_OBJ_KEY(void) {
             dst_bucket, dst_obj_key, ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(400 == resp->status_code);
-    if (resp->status_code != 200) {
+    if (resp->status_code != 400) {
         printf("status code = %ld\n", resp->status_code);
         printf("status msg = %s\n", resp->status_msg);
         printf("error msg = %s\n", resp->body);
@@ -162,9 +164,11 @@ void TEST_COPY_OBJECT_WITH_DIFF_BUCKET() {
             dst_bucket, dst_obj_key, ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
-    printf("status code = %ld\n", resp->status_code);
-    printf("status msg = %s\n", resp->status_msg);
-    printf("error msg = %s\n", resp->body);
+    if (200 != resp->status_code) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
     buffer_free(resp);
 
     // delete dst obj
@@ -238,9 +242,11 @@ void TEST_COPY_OBJECT_WITH_DIFF_BUCKET_AND_EXIST_KEY() {
             dst_bucket, dst_obj_key, ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
-    printf("status code = %ld\n", resp->status_code);
-    printf("status msg = %s\n", resp->status_msg);
-    printf("error msg = %s\n", resp->body);
+    if (200 != resp->status_code) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
     buffer_free(resp);
     sleep(5);
     // copy obj second time
@@ -248,9 +254,11 @@ void TEST_COPY_OBJECT_WITH_DIFF_BUCKET_AND_EXIST_KEY() {
             dst_bucket, dst_obj_key, ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(400 == resp->status_code);
-    printf("status code = %ld\n", resp->status_code);
-    printf("status msg = %s\n", resp->status_msg);
-    printf("error msg = %s\n", resp->body);
+    if (400 != resp->status_code) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
     buffer_free(resp);
 
     // delete dst obj
@@ -268,6 +276,75 @@ void TEST_COPY_OBJECT_WITH_DIFF_BUCKET_AND_EXIST_KEY() {
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
     if (resp->status_code != 204) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+
+    // delete src obj
+    resp = delete_object(host, src_bucket, src_obj_key, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(204 == resp->status_code);
+    if (resp->status_code != 204) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    buffer_free(resp);
+}
+
+void TEST_COPY_OBJECT_WITH_BLANK_DST_BUCKET_NAME() {
+    int error;
+    buffer* resp = NULL;
+
+    const char* src_bucket = "c-bucket1";
+    const char* src_obj_key = "unit_test_dir/src_object1";
+
+    // upload first
+    const char* filename = "./lib/libcunit.a";
+    resp = upload_file_object(host, src_bucket, src_obj_key, filename,
+            ak, sk, NULL, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(200 == resp->status_code);
+    if (resp->status_code != 200) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+        buffer_free(resp);
+        return;
+    }
+    buffer_free(resp);
+
+    // copy obj 
+    const char* dst_bucket = NULL;
+    const char* dst_obj_key = src_obj_key;
+    error = -1;
+    resp = copy_object(host, src_bucket, src_obj_key,
+            dst_bucket, dst_obj_key, ak, sk, NULL, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(405 == resp->status_code);
+    if (405 != resp->status_code) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    buffer_free(resp);
+
+    // delete dst obj
+    resp = delete_object(host, dst_bucket, dst_obj_key, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(405 == resp->status_code);
+    if (resp->status_code != 405) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    buffer_free(resp);
+    // delete dst bucket
+    resp = delete_bucket(host, dst_bucket, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(405 == resp->status_code);
+    if (resp->status_code != 405) {
         printf("status code = %ld\n", resp->status_code);
         printf("status msg = %s\n", resp->status_msg);
         printf("error msg = %s\n", resp->body);
@@ -316,7 +393,9 @@ int main() {
             CU_add_test(pSuite, "test copy objec with diff bucket \n",
                 TEST_COPY_OBJECT_WITH_DIFF_BUCKET) == NULL ||
             CU_add_test(pSuite, "test copy objec with diff bucket and exist key\n",
-                TEST_COPY_OBJECT_WITH_DIFF_BUCKET_AND_EXIST_KEY) == NULL) {
+                TEST_COPY_OBJECT_WITH_DIFF_BUCKET_AND_EXIST_KEY) == NULL ||
+            CU_add_test(pSuite, "test copy object with blank dst bucket name\n",
+                TEST_COPY_OBJECT_WITH_BLANK_DST_BUCKET_NAME) == NULL) {
         CU_cleanup_registry();
         return CU_get_error();
     }
