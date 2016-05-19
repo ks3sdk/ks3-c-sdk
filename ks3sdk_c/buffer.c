@@ -30,9 +30,16 @@ buffer* buffer_init(void) {
 void buffer_free(buffer* b) {
     if (!b) return;
 
-    free(b->header);
-    free(b->body);
+    if (b->header != NULL) {
+        free(b->header);
+        b->header = NULL;
+    }
+    if (b->body != NULL) {
+        free(b->body);
+        b->body = NULL;
+    }
     free(b);
+    b = NULL;
 }
 
 int buffer_header_prepare_append(buffer* b, size_t size) {

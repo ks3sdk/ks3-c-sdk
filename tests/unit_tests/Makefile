@@ -6,7 +6,7 @@ SRCS := $(wildcard *.c)
 OBJS := $(patsubst %.c, %.o, ${SRCS})
 
 TARGET = list_object delete_bucket create_bucket upload_obj \
-		 list_bucket delete_object example copy_object upload_buf_obj
+		 list_bucket delete_object example copy_object upload_file_obj
 RM = rm -rf
 
 all:$(TARGET)
@@ -35,9 +35,9 @@ upload_obj:upload_obj.o load_key.o
 	$(CC) -o $@ $^ $(CFLAGES) $(LIBS)
 upload_obj.o:upload_obj.c
 	$(CC) -c $(CFLAGES) $< -o $@
-upload_buf_obj:upload_buf_obj.o load_key.o
+upload_file_obj:upload_file_obj.o load_key.o
 	$(CC) -o $@ $^ $(CFLAGES) $(LIBS)
-upload_buf_obj.o:upload_buf_obj.c
+upload_file_obj.o:upload_file_obj.c
 	$(CC) -c $(CFLAGES) $< -o $@
 list_bucket:list_bucket.o load_key.o
 	$(CC) -o $@ $^ $(CFLAGES) $(LIBS)

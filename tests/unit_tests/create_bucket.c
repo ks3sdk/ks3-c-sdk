@@ -14,7 +14,10 @@ int clean_suite1() {
     return 0;
 }
 
-const char* host = "kss.ksyun.com";
+//const char* host = "kss.ksyun.com";
+//const char* host = "ks3-cn-beijing.ksyun.com";
+const char* host = "ks3-cn-beijing-internal.ksyun.com";
+//const char* host = "ks3-cn-shanghai.ksyun.com";
 
 void TEST_CREATE_BUCKET(void) {
     int error;
@@ -26,6 +29,11 @@ void TEST_CREATE_BUCKET(void) {
             ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
+    if (200 != resp->status_code) {
+        printf("status code=%d\n", resp->status_code);
+        printf("status msg=%s\n", resp->status_msg);
+        printf("error msg=%s\n", resp->body);
+    }
     buffer_free(resp);
 
     // delete bucket finally
@@ -123,18 +131,15 @@ int main() {
     }
     CU_pSuite pSuite = NULL;
 
-    /* initialize the CUnit test registry */
     if (CUE_SUCCESS != CU_initialize_registry())
         return CU_get_error();
 
-    /* add a suite to the registry */
     pSuite = CU_add_suite("Suite_1", init_suite1, clean_suite1);
     if (NULL == pSuite) {
         CU_cleanup_registry();
         return CU_get_error();
     }
 
-    /* add the tests to the suite */
     if (CU_add_test(pSuite, "test create bucket\n",
                 TEST_CREATE_BUCKET) == NULL ||
             CU_add_test(pSuite, "test create bucket exist\n",
@@ -149,7 +154,6 @@ int main() {
         return CU_get_error();
     }
 
-    /* Run all tests using the CUnit Basic interface */
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
     CU_cleanup_registry();

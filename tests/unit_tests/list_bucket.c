@@ -21,7 +21,8 @@ int clean_suite1(void) {
     return 0;
 }
 
-const char* host = "kss.ksyun.com";
+//const char* host = "kss.ksyun.com";
+const char* host = "ks3-cn-beijing.ksyun.com";
 
 void TEST_LIST_ALL_BUCKETS(void) {
     int error;
@@ -30,6 +31,12 @@ void TEST_LIST_ALL_BUCKETS(void) {
     resp = list_all_bucket(host, ak, sk, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
+    if (200 != resp->status_code) {
+        printf("\nstatus code=%d\n", resp->status_code);
+        printf("status msg=%s\n", resp->status_msg);
+        printf("error msg=%s\n", resp->body);
+    }
+
     buffer_free(resp);
 }
 

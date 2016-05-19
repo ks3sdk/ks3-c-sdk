@@ -21,16 +21,32 @@ int clean_suite1(void) {
     return 0;
 }
 
-const char* host = "kss.ksyun.com";
+//const char* host = "kss.ksyun.com";
+const char* host = "ks3-cn-beijing.ksyun.com";
 
 void TEST_LIST_OBJECT(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* bucket = "c-bucket1";
+    const char* bucket = "bucket-for-listobj-test";
+    resp = create_bucket(host, bucket, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(200 == resp->status_code);
+    buffer_free(resp);
+
     resp = list_bucket_objects(host, bucket, ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
+    if (200 != resp->status_code) {
+        printf("\nstatus code=%d\n", resp->status_code);
+        printf("status msg=%s\n", resp->status_msg);
+        printf("error msg=%s\n", resp->body);
+    }
+    buffer_free(resp);
+
+    resp = delete_bucket(host, bucket, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(204 == resp->status_code);
     buffer_free(resp);
 }
 

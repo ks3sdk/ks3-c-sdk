@@ -39,6 +39,7 @@ int load_key() {
     ak[len - 1] = '\0';
     printf("ak=%s\n", ak);
     fgets(sk, 100, fp);
+    len = strlen(sk);
     sk[len - 1] = '\0';
     printf("sk=%s\n", sk);
     fclose(fp);

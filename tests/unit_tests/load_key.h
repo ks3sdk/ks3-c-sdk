@@ -10,4 +10,6 @@ char ak[100];
 char sk[100];
 
 extern int load_ak_sk();
+extern int CreateBucket(const char* host, const char* bucket);
+extern int DeleteBucket(const char* host, const char* bucket);
 
