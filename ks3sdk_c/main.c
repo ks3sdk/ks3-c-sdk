@@ -8,6 +8,7 @@ int load_key();
 void api_test_bucket_relative();
 void api_test_object_relative();
 void api_test_buf_relative();
+void api_test_copy_object();
 
 char ak[100] = { '\0' };
 char sk[100] = { '\0' };
@@ -21,6 +22,7 @@ int main()
 	api_test_bucket_relative();
 	api_test_object_relative();
 	api_test_buf_relative();
+	api_test_copy_object();
 	
 	//system("pause");
 	return 0;
@@ -312,3 +314,19 @@ void api_test_buf_relative() {
 	buffer_free(resp);
 }
 
+void api_test_copy_object() {
+    int error;
+    buffer* resp = NULL;
+
+    char* host = "kss.ksyun.com";
+    char* src_bucket = "c-bucket1";
+    char* src_object_key = "4.log";
+    char* dst_bucket = "c-bucket1";
+    char* dst_object_key = "4.log-dst";
+    resp = copy_object(host, src_bucket, src_object_key,
+            dst_bucket, dst_object_key, ak, sk, NULL, NULL, &error);
+    printf("copy_object curl error=%d\n", error);
+    printf("copy_object status code=%d\n", resp->status_code);
+    printf("copy_object status msg=%s\n", resp->status_msg);
+    printf("copy_object err msg=%s\n", resp->body);
+}
