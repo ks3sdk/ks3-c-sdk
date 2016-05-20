@@ -152,7 +152,7 @@ static void encode_value(const char* str_source,
 
     idx = 0;
     while (from < end) {
-        c = *from++;                                                                                                  
+        c = *from++;
         if (c == ' ') {
             out_str[idx++] = '+';
         } else if ((c < '0' && c != '-' && c != '.') ||
@@ -165,7 +165,7 @@ static void encode_value(const char* str_source,
         } else {
             out_str[idx++] = c;
         }
-    }                                                                                                                 
+    }
     out_str[idx] = '\0';
 }
 
@@ -315,7 +315,8 @@ static void canon_headers(const rb_node_t* root,
 
 extern char* make_origin_sign(int method_type,
 	const char* bucket, const char* obj,
-	const char* query_args, const char* headers,                                                       const char* time, char* origin_sign) {
+	const char* query_args, const char* headers,
+	const char* time, char* origin_sign) {
 
 	static const char* method[3] = {"GET", "PUT", "DELETE"};
 	struct rb_node_t* root = NULL;
