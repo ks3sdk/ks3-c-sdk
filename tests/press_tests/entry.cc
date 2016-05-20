@@ -1,6 +1,7 @@
 
 #include <map>
 #include <vector>
+#include <string.h>
 #include "press_upload.h"
 #include "press_upload_buf.h"
 #include "press_download.h"
@@ -19,6 +20,10 @@ using ks3_c_sdk::test::CountDownLatch;
 
 Ks3Presser* GetKs3Presser(const string& op);
 
+char ak[100];
+char sk[100];
+int load_key();
+
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         printf("[Usage] %s press_upload [dir]\n", argv[0]);
@@ -31,20 +36,18 @@ int main(int argc, char* argv[]) {
     string src_dir = argv[2];
     printf("entry src_dir=%s, op=%s\n",
             src_dir.c_str(), op.c_str());
-    /*
-    char* id = "S1guCl0KF/oA285zzEDK";
-    char* key = "DGSTgVMQ08EepL3CanUoatVV9en7mB856ljbNEaK";
-    char* host   = "kss.ksyun.com"; //hz host
-    char* bucket = "c-bucket1";
-    char* headers = "x-kss-callbackurl:http://10.4.2.38:19090/";
-    */
+
+    int ret = load_key();
+    if (ret != 0) {
+        return ret;
+    }
     Ks3ApiInfo ks3_api_info;
     ks3_api_info.host = "kss.ksyun.com";
     ks3_api_info.bucket = "c-bucket1";
-    ks3_api_info.access_key = "S1guCl0KF/qxO4CElPY/";
-    ks3_api_info.secret_key = "b7zBDxv9ohTPc0tgc8Hpp89i7I0FDnkyQY4mYY6I";
+    ks3_api_info.access_key = ak;
+    ks3_api_info.secret_key = sk;
 
-    int count = 1;
+    int count = 10;
     CountDownLatch latch(count);
     map<int, Ks3Presser*> presser_map;
     for (int seq = 1; seq <= count; seq++) {
@@ -75,4 +78,24 @@ Ks3Presser* GetKs3Presser(const string& op) {
         return new Ks3Deleter;
     }
     return NULL;
+}
+
+int load_key() {
+    char* key_file = "/home/hanbing1/key";
+    FILE* fp = NULL;
+    fp = fopen(key_file, "r");
+    if (fp == NULL) {
+        printf("fopen file=%s failed\n", key_file);
+        return -1;
+    }
+    fgets(ak, 100, fp);
+    int len = strlen(ak);
+    ak[len - 1] = '\0';
+    printf("ak=%s\n", ak);
+    fgets(sk, 100, fp);
+    len = strlen(sk);
+    sk[len - 1] = '\0';
+    printf("sk=%s\n", sk);
+    fclose(fp);
+    return 0;
 }

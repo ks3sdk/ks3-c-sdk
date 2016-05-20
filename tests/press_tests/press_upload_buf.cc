@@ -52,6 +52,8 @@ void Ks3BufUploader::HandleFile(const string& localfile,
     printf("[OK], seq=%d, file=%s, size=%d, ut=%ld us\n", seq_,
             localfile.c_str(), size, (t2 - t1));
     buffer_free(resp);
+    free(buf);
+    buf = NULL;
     /*
 	///////
 
