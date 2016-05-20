@@ -10,8 +10,8 @@ RM = rm -rf
 
 all:$(TARGET)
 
-press_entry: $(OBJS)
-	$(CC) -o $@ $(OBJS) $(CFLAGES) $(LIBS)
+$(TARGET):%:$(OBJS)
+	$(CC) -o $@ $^ $(CFLAGES) $(LIBS)
 
 %.o: %.cc
 	$(CC) -c $(CFLAGES) $< -o $@

@@ -26,7 +26,7 @@ extern buffer* upload_file_object(const char* host, const char* bucket,
 	const char* access_key, const char* secret_key,
 	const char* query_args, const char* headers, int* err);
 extern buffer* download_file_object(const char* host,
-	const char* bucket, const char*object_key,
+	const char* bucket, const char* object_key,
 	const char* filename, const char* access_key,
 	const char* secret_key, const char* query_args, int* err);
 extern buffer* upload_object(const char* host, const char* bucket,
@@ -44,6 +44,10 @@ extern buffer* copy_object(const char* host, const char* src_bucket,
         const char* dst_object_key, const char* access_key,
         const char* secret_key, const char* query_args,
         const char* headers, int* err);
+
+extern buffer* list_multipart_uploads(const char* host, const char* bucket,
+        const char* access_key, const char* secret_key,
+        const char* query_args, const char* headers, int* err);
 
 #ifdef __cplusplus
 }

@@ -116,3 +116,13 @@ buffer* copy_object(const char* host, const char* src_bucket,
 	        NULL, query_args, actual_header, access_key, secret_key, resp, err);
 	return resp;
 }
+
+buffer* list_multipart_uploads(const char* host, const char* bucket,
+    const char* access_key, const char* secret_key,
+    const char* query_args, const char* headers, int* err) {
+	buffer* resp = NULL;
+	resp = buffer_init();
+	make_header(host, GET_METHOD, bucket, NULL, NULL, query_args, headers,
+		access_key, secret_key, resp, err);
+	return resp;
+}

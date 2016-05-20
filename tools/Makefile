@@ -8,13 +8,15 @@ SRCS := $(wildcard *.c)
 OBJS := $(patsubst %.c, %.o, ${SRCS})
 LIBOBJS := $(filter-out main.o , $(OBJS))
 
-TARGET = delete_bucket 
+TARGET = create_bucket delete_bucket upload_object \
+		 download_object delete_object copy_object \
+		 list_objects list_multipart_uploads 
 RM = rm -rf
 
 all:$(TARGET)
 
-$(TARGET):$(OBJS)
-	$(CC) -o $(TARGET) $(OBJS) $(CFLAGES) $(LIBS)
+$(TARGET):%:%.o
+	$(CC) -o $@ $^ $(CFLAGES) $(LIBS)
 $(OBJS):%.o:%.c
 	$(CC) -c $(CFLAGES) $< -o $@
 clean:

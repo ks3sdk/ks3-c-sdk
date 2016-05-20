@@ -84,6 +84,9 @@ static void split_kv(const char* src, const char* delim, key_value* kv) {
     kv->key = (char *) malloc (len + 1);
     strncpy(kv->key, token, len);          
     kv->key[len] = '\0';
+    if (len == strlen(src)) {
+        return;
+    }
 
 	token = token + len + 1;
     trim_token = trim(token);
@@ -124,6 +127,8 @@ static void build_query_kv_map(const char* query_args, rb_node_t** root) {
     while (token != NULL) {
         // 2. split by '='
         kv_pair = (key_value *) malloc (sizeof(key_value));
+        kv_pair->key = NULL;
+        kv_pair->value = NULL;
         // key : no need tolower and trim
         // value : need to trim, no need tolower
         split_kv(token, "=", kv_pair);
@@ -186,16 +191,18 @@ static void encode_kv_map(rb_node_t* root,
 		|| exist(RESPONSE_OVERIDES, num_of_rides, cur_kv->key)) {
 	    // join key=coded_value with &
         strcat(out_str, cur_kv->key);
-        strcat(out_str, "=");
-        if (need_code) {
-            int size = strlen(cur_kv->value) * 3;                                              
-            coded_value = (char *) malloc (size);;
-            memset(coded_value, '\0', size);
-            encode_value(cur_kv->value, coded_value);
-            strcat(out_str, coded_value);
-			free(coded_value);
-        } else {
-            strcat(out_str, cur_kv->value);
+        if (cur_kv->value != NULL) {
+            strcat(out_str, "=");
+            if (need_code) {
+                int size = strlen(cur_kv->value) * 3;                                              
+                coded_value = (char *) malloc (size);;
+                memset(coded_value, '\0', size);
+                encode_value(cur_kv->value, coded_value);
+                strcat(out_str, coded_value);
+                free(coded_value);
+            } else {
+                strcat(out_str, cur_kv->value);
+            }
         }
         strcat(out_str, "&");
     }
@@ -276,6 +283,8 @@ static void build_header_kv_map(const char* headers,
     while (token != NULL) {
         // 2. split by ':'
         kv_pair = (key_value *) malloc (sizeof(key_value));        
+        kv_pair->key = NULL;
+        kv_pair->value = NULL;
 		// key : need tolower, no need to trim
         // value : need to trim, no need tolower
         split_kv(token, ":", kv_pair);
@@ -304,9 +313,11 @@ static void canon_headers(const rb_node_t* root,
 	// compare key with specify_header and join kv pairs with '\n'
 	if (strncmp(cur_kv->key, specify_header, strlen(specify_header)) == 0) {
 		strcat(out_headers, cur_kv->key);
-		strcat(out_headers, ":");
-		strcat(out_headers, cur_kv->value);
-		strcat(out_headers, "\n");
+		if (cur_kv->value != NULL) {
+            strcat(out_headers, ":");
+            strcat(out_headers, cur_kv->value);
+            strcat(out_headers, "\n");
+		}
 	}
 	if (root->right != NULL) {
 		canon_headers(root->right, out_headers);
