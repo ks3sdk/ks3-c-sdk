@@ -23,13 +23,32 @@ int clean_suite1(void) {
 
 //const char* host = "kss.ksyun.com";
 const char* host = "ks3-cn-beijing.ksyun.com";
+const char* bucket = "bucket-test-for-list-object";
 
-void TEST_LIST_OBJECT(void) {
+void TEST_LIST_OBJECT_BUCKET_EMPTY(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* bucket = "bucket-for-listobj-test";
-    resp = create_bucket(host, bucket, ak, sk, NULL, &error);
+    resp = list_bucket_objects(host, bucket, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(200 == resp->status_code);
+    if (200 != resp->status_code) {
+        printf("\nstatus code=%d\n", resp->status_code);
+        printf("status msg=%s\n", resp->status_msg);
+        printf("error msg=%s\n", resp->body);
+    }
+    buffer_free(resp);
+}
+
+void TEST_LIST_OBJECT_BUCKET_NOT_EMPTY(void) {
+    int error;
+    buffer* resp = NULL;
+
+    // upload file first
+    const char* object_key = "object1-for-list";
+    const char* filename = "./lib/libcunit.a";
+    resp = upload_file_object(host, bucket, object_key,
+            filename, ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     buffer_free(resp);
@@ -44,7 +63,7 @@ void TEST_LIST_OBJECT(void) {
     }
     buffer_free(resp);
 
-    resp = delete_bucket(host, bucket, ak, sk, NULL, &error);
+    resp = delete_object(host, bucket, object_key, ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
     buffer_free(resp);
@@ -54,12 +73,15 @@ void TEST_LIST_OBJECT_BUCKET_NOT_EXIST(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* bucket = "bucket-not-exist1";
-    resp = list_bucket_objects(host, bucket, ak, sk, NULL, &error);
+    const char* bucket_not_exist = "bucket-not-exist";
+    resp = delete_bucket(host, bucket_not_exist, ak, sk, NULL, &error);
+    CU_ASSERT(error == 0);
+    CU_ASSERT(204 == resp->status_code || 404 == resp->status_code);
+    buffer_free(resp);
+
+    resp = list_bucket_objects(host, bucket_not_exist, ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
-    printf("status msg=%s\n", resp->status_msg);
-    printf("error msg=%s\n", resp->body);
     buffer_free(resp);
 }
 
@@ -68,12 +90,9 @@ void TEST_LIST_OBJECT_AK_INVALID() {
     buffer* resp = NULL;
 
     const char* access_key = "S1guCl0KF/oA2xxxxxxxxxx";
-    const char* bucket = "c-bucket1";
     resp = list_bucket_objects(host, bucket, access_key, sk, NULL, &error);
     CU_ASSERT(0 == error);
-    CU_ASSERT(403 == resp->status_code);
-    printf("status msg=%s\n", resp->status_msg);
-    printf("error msg=%s\n", resp->body);
+    CU_ASSERT(403 == resp->status_code); // forbidden
     buffer_free(resp);
 }
 
@@ -82,12 +101,9 @@ void TEST_LIST_OBJECT_SK_INVALID() {
     buffer* resp = NULL;
 
     const char* secret_key = "DGSTgVMQ08EepL3CanUoaxxxxxxxxxxxxxxxxxxxxxxx";
-    const char* bucket = "c-bucket1";
     resp = list_bucket_objects(host, bucket, ak, secret_key, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(403 == resp->status_code);
-    printf("status msg=%s\n", resp->status_msg);
-    printf("error msg=%s\n", resp->body);
     buffer_free(resp);
 }
 
@@ -101,6 +117,13 @@ int main() {
         printf("[ERROR] load ak, sk failed\n");
         return ret;
     }
+
+    ret = CreateBucket(host, bucket);
+    if (ret != 0) {
+        printf("[ERROR] create bucket failed\n");
+        return ret;
+    }
+
     CU_pSuite pSuite = NULL;
 
     /* initialize the CUnit test registry */
@@ -115,8 +138,10 @@ int main() {
     }
 
     /* add the tests to the suite */
-    if (CU_add_test(pSuite, "test list object\n",
-                TEST_LIST_OBJECT) == NULL
+    if (CU_add_test(pSuite, "test list object with bucket empty\n",
+                TEST_LIST_OBJECT_BUCKET_EMPTY) == NULL
+          || CU_add_test(pSuite, "test list object with bucket not empty",
+              TEST_LIST_OBJECT_BUCKET_NOT_EMPTY) == NULL
           || CU_add_test(pSuite, "test list object with invalid ak\n",
               TEST_LIST_OBJECT_AK_INVALID) == NULL
           || CU_add_test(pSuite, "test list object with invalid sk\n",
@@ -131,5 +156,10 @@ int main() {
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
     CU_cleanup_registry();
+
+    ret = DeleteBucket(host, bucket);
+    if (ret != 0) {
+        printf("[ERROR] delete bucket failed\n");
+    }
     return CU_get_error();
 }

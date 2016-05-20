@@ -23,13 +23,13 @@ int clean_suite1(void) {
 
 //const char* host = "kss.ksyun.com";
 const char* host = "ks3-cn-beijing.ksyun.com";
-const char* bucket = "bucket-upload-file-object-test";
+const char* bucket = "bucket-test-for-upload-file-object";
 
-void TEST_UPLOAD_OBJECT(void) {
+void TEST_UPLOAD_FILE_OBJECT(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::xxxx";
+    const char* obj_key = "unit_test_dir/upload_file_obj1_longlonglonglong::::xxxx";
     const char* filename = "./lib/libcunit.a";
 
     resp = delete_object(host, bucket, obj_key, ak, sk, NULL, &error);
@@ -60,11 +60,11 @@ void TEST_UPLOAD_OBJECT(void) {
     buffer_free(resp);
 }
 
-void TEST_UPLOAD_OBJECT_EXIST(void) {
+void TEST_UPLOAD_FILE_OBJECT_EXIST(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::exist";
+    const char* obj_key = "unit_test_dir/upload_file_obj1_longlonglonglong::::exist";
     const char* filename = "./example.c";
 
     resp = delete_object(host, bucket, obj_key, ak, sk, NULL, &error);
@@ -106,11 +106,11 @@ void TEST_UPLOAD_OBJECT_EXIST(void) {
     buffer_free(resp);
 }
 
-void TEST_UPLOAD_OBJECT_WITH_CALLBACK(void) {
+void TEST_UPLOAD_FILE_OBJECT_WITH_CALLBACK(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::callback";
+    const char* obj_key = "unit_test_dir/upload_file_obj1_longlonglonglong::::callback";
     const char* filename = "./example.c";
     const char* headers = "x-kss-callbackurl:http://10.4.2.38:19092/";
 
@@ -142,11 +142,11 @@ void TEST_UPLOAD_OBJECT_WITH_CALLBACK(void) {
     buffer_free(resp);
 }
 
-void TEST_UPLOAD_OBJECT_WITH_HEADERS(void) {
+void TEST_UPLOAD_FILE_OBJECT_WITH_HEADERS(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::header:callback:content-type";
+    const char* obj_key = "unit_test_dir/upload_file_obj1_longlonglonglong::::header:callback:content-type";
     const char* filename = "./example.c";
     const char* headers = "Content-Type:text\nx-kss-callbackurl:http://10.4.2.38:19092/";
 
@@ -178,11 +178,11 @@ void TEST_UPLOAD_OBJECT_WITH_HEADERS(void) {
     buffer_free(resp);
 }
 
-void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
+void TEST_UPLOAD_FILE_OBJECT_WITH_SPACE_HEADERS(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::header:callback:content-type";
+    const char* obj_key = "unit_test_dir/upload_file_obj1_longlonglonglong::::header:callback:content-type";
     const char* filename = "./example.c";
     const char* headers = "Content-Type :text\nx-kss-callbackurl:http://10.4.2.38:19092/";
 
@@ -238,11 +238,11 @@ void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
     buffer_free(resp);
 }
 
-void TEST_UPLOAD_OBJECT_WITH_ACL(void) {
+void TEST_UPLOAD_FILE_OBJECT_WITH_ACL(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::header:callback:content-type";
+    const char* obj_key = "unit_test_dir/upload_file_obj1_longlonglonglong::::header:callback:content-type";
     const char* filename = "./example.c";
     const char* headers = "x-kss-acl:public-read\nx-kss-callbackurl:http://10.4.2.38:19092/";
 
@@ -303,18 +303,18 @@ int main() {
     }
 
     /* add the tests to the suite */
-    if (CU_add_test(pSuite, "test upload object\n",
-                TEST_UPLOAD_OBJECT) == NULL ||
-            CU_add_test(pSuite, "test upload object exist\n",
-                TEST_UPLOAD_OBJECT_EXIST) == NULL ||
-            CU_add_test(pSuite, "test upload object with callback\n",
-                TEST_UPLOAD_OBJECT_WITH_CALLBACK) == NULL ||
-            CU_add_test(pSuite, "test upload object with headers\n",
-                TEST_UPLOAD_OBJECT_WITH_HEADERS) == NULL ||
-            CU_add_test(pSuite, "test upload object with space headers\n",
-                TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS) == NULL ||
-            CU_add_test(pSuite, "test upload object with acl\n",
-                TEST_UPLOAD_OBJECT_WITH_ACL) == NULL) {
+    if (CU_add_test(pSuite, "test upload file object\n",
+                TEST_UPLOAD_FILE_OBJECT) == NULL ||
+            CU_add_test(pSuite, "test upload file object exist\n",
+                TEST_UPLOAD_FILE_OBJECT_EXIST) == NULL ||
+            CU_add_test(pSuite, "test upload file object with callback\n",
+                TEST_UPLOAD_FILE_OBJECT_WITH_CALLBACK) == NULL ||
+            CU_add_test(pSuite, "test upload file object with headers\n",
+                TEST_UPLOAD_FILE_OBJECT_WITH_HEADERS) == NULL ||
+            CU_add_test(pSuite, "test upload file object with space headers\n",
+                TEST_UPLOAD_FILE_OBJECT_WITH_SPACE_HEADERS) == NULL ||
+            CU_add_test(pSuite, "test upload file object with acl\n",
+                TEST_UPLOAD_FILE_OBJECT_WITH_ACL) == NULL) {
         CU_cleanup_registry();
         return CU_get_error();
     }

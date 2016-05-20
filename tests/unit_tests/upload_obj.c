@@ -21,9 +21,37 @@ int clean_suite1(void) {
     return 0;
 }
 
+int file_len(const char* filename) {
+    FILE * fp = NULL;
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        printf("[ERROR] open file=%s failed\n", filename);
+        return -1;
+    }
+    fseek(fp, 0, SEEK_END);
+    int len = ftell(fp);
+    fclose(fp);
+    return len;
+}
+
+int read_file(const char* filename, char* buf) {
+    FILE* fp = NULL;
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        printf("[ERROR] open file=%s failed\n", filename);
+        return -1;
+    }
+    fseek(fp, 0, SEEK_END);
+    int filelen = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    int rlen = fread(buf, 1, filelen, fp);
+    fclose(fp);
+    return rlen;
+}
+
 //const char* host = "kss.ksyun.com";
 const char* host = "ks3-cn-beijing.ksyun.com";
-const char* bucket = "bucket-upload-file-object-test";
+const char* bucket = "bucket-test-for-upload-object";
 
 void TEST_UPLOAD_OBJECT(void) {
     int error;
@@ -37,7 +65,12 @@ void TEST_UPLOAD_OBJECT(void) {
     CU_ASSERT(204 == resp->status_code || 404 == resp->status_code);
     buffer_free(resp);
 
-    resp = upload_file_object(host, bucket, obj_key, filename,
+    int filelen = file_len(filename);
+    char* buf = (char *) malloc (filelen);
+    memset(buf, '\0', filelen);
+    int rlen = read_file(filename, buf);
+    CU_ASSERT(rlen == filelen);
+    resp = upload_object(host, bucket, obj_key, buf, rlen,
             ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
@@ -46,6 +79,7 @@ void TEST_UPLOAD_OBJECT(void) {
         printf("status msg = %s\n", resp->status_msg);
         printf("error msg = %s\n", resp->body);
     }
+    free(buf);
     buffer_free(resp);
 
     resp = delete_object(host, bucket, obj_key,
@@ -64,7 +98,7 @@ void TEST_UPLOAD_OBJECT_EXIST(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::exist";
+    const char* obj_key = "unit_test_dir/upload_obj2_longlonglonglong::::exist";
     const char* filename = "./example.c";
 
     resp = delete_object(host, bucket, obj_key, ak, sk, NULL, &error);
@@ -72,7 +106,13 @@ void TEST_UPLOAD_OBJECT_EXIST(void) {
     CU_ASSERT(204 == resp->status_code || 404 == resp->status_code);
     buffer_free(resp);
 
-    resp = upload_file_object(host, bucket, obj_key, filename,
+    int filelen = file_len(filename);
+    char* buf = (char *) malloc (filelen);
+    memset(buf, '\0', filelen);
+    int rlen = read_file(filename, buf);
+    CU_ASSERT(rlen == filelen);
+
+    resp = upload_object(host, bucket, obj_key, buf, rlen,
             ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
@@ -83,7 +123,7 @@ void TEST_UPLOAD_OBJECT_EXIST(void) {
     }
     buffer_free(resp);
 
-    resp = upload_file_object(host, bucket, obj_key, filename,
+    resp = upload_object(host, bucket, obj_key, buf, rlen,
             ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
@@ -93,6 +133,8 @@ void TEST_UPLOAD_OBJECT_EXIST(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
+    free(buf);
+    buf = NULL;
 
     resp = delete_object(host, bucket, obj_key,
             ak, sk, NULL, &error);
@@ -110,7 +152,7 @@ void TEST_UPLOAD_OBJECT_WITH_CALLBACK(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::callback";
+    const char* obj_key = "unit_test_dir/upload_obj3_longlonglonglong::::callback";
     const char* filename = "./example.c";
     const char* headers = "x-kss-callbackurl:http://10.4.2.38:19092/";
 
@@ -119,7 +161,13 @@ void TEST_UPLOAD_OBJECT_WITH_CALLBACK(void) {
     CU_ASSERT(204 == resp->status_code || 404 == resp->status_code);
     buffer_free(resp);
 
-    resp = upload_file_object(host, bucket, obj_key, filename,
+    int filelen = file_len(filename);
+    char* buf = (char *) malloc (filelen);
+    memset(buf, '\0', filelen);
+    int rlen = read_file(filename, buf);
+    CU_ASSERT(rlen == filelen);
+
+    resp = upload_object(host, bucket, obj_key, buf, rlen,
             ak, sk, NULL, headers, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
@@ -129,6 +177,8 @@ void TEST_UPLOAD_OBJECT_WITH_CALLBACK(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
+    free(buf);
+    buf = NULL;
 
     resp = delete_object(host, bucket, obj_key,
             ak, sk, NULL, &error);
@@ -146,7 +196,7 @@ void TEST_UPLOAD_OBJECT_WITH_HEADERS(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::header:callback:content-type";
+    const char* obj_key = "unit_test_dir/upload_obj4_longlonglonglong::::header:callback:content-type";
     const char* filename = "./example.c";
     const char* headers = "Content-Type:text\nx-kss-callbackurl:http://10.4.2.38:19092/";
 
@@ -155,7 +205,13 @@ void TEST_UPLOAD_OBJECT_WITH_HEADERS(void) {
     CU_ASSERT(204 == resp->status_code || 404 == resp->status_code);
     buffer_free(resp);
 
-    resp = upload_file_object(host, bucket, obj_key, filename,
+    int filelen = file_len(filename);
+    char* buf = (char *) malloc (filelen);
+    memset(buf, '\0', filelen);
+    int rlen = read_file(filename, buf);
+    CU_ASSERT(rlen == filelen);
+
+    resp = upload_object(host, bucket, obj_key, buf, rlen,
             ak, sk, NULL, headers, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
@@ -165,6 +221,8 @@ void TEST_UPLOAD_OBJECT_WITH_HEADERS(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
+    free(buf);
+    buf = NULL;
 
     resp = delete_object(host, bucket, obj_key,
             ak, sk, NULL, &error);
@@ -182,7 +240,7 @@ void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::header:callback:content-type";
+    const char* obj_key = "unit_test_dir/upload_obj5_longlonglonglong::::header:callback:content-type";
     const char* filename = "./example.c";
     const char* headers = "Content-Type :text\nx-kss-callbackurl:http://10.4.2.38:19092/";
 
@@ -191,7 +249,13 @@ void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
     CU_ASSERT(204 == resp->status_code || 404 == resp->status_code);
     buffer_free(resp);
 
-    resp = upload_file_object(host, bucket, obj_key, filename,
+    int filelen = file_len(filename);
+    char* buf = (char *) malloc (filelen);
+    memset(buf, '\0', filelen);
+    int rlen = read_file(filename, buf);
+    CU_ASSERT(rlen == filelen);
+
+    resp = upload_object(host, bucket, obj_key, buf, rlen,
             ak, sk, NULL, headers, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
@@ -203,7 +267,7 @@ void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
     buffer_free(resp);
 
     headers = "Content-Type: text\nx-kss-callbackurl:http://10.4.2.38:19092/";
-    resp = upload_file_object(host, bucket, obj_key, filename,
+    resp = upload_object(host, bucket, obj_key, buf, rlen,
             ak, sk, NULL, headers, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
@@ -215,7 +279,7 @@ void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
     buffer_free(resp);
 
     headers = "Content-Type : text\nx-kss-callbackurl:http://10.4.2.38:19092/";
-    resp = upload_file_object(host, bucket, obj_key, filename,
+    resp = upload_object(host, bucket, obj_key, buf, rlen,
             ak, sk, NULL, headers, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
@@ -225,6 +289,8 @@ void TEST_UPLOAD_OBJECT_WITH_SPACE_HEADERS(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
+    free(buf);
+    buf = NULL;
 
     resp = delete_object(host, bucket, obj_key,
             ak, sk, NULL, &error);
@@ -242,7 +308,7 @@ void TEST_UPLOAD_OBJECT_WITH_ACL(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* obj_key = "unit_test_dir/upload_obj1_longlonglonglong::::header:callback:content-type";
+    const char* obj_key = "unit_test_dir/upload_obj6_longlonglonglong::::header:callback:content-type";
     const char* filename = "./example.c";
     const char* headers = "x-kss-acl:public-read\nx-kss-callbackurl:http://10.4.2.38:19092/";
 
@@ -251,7 +317,13 @@ void TEST_UPLOAD_OBJECT_WITH_ACL(void) {
     CU_ASSERT(204 == resp->status_code || 404 == resp->status_code);
     buffer_free(resp);
 
-    resp = upload_file_object(host, bucket, obj_key, filename,
+    int filelen = file_len(filename);
+    char* buf = (char *) malloc (filelen);
+    memset(buf, '\0', filelen);
+    int rlen = read_file(filename, buf);
+    CU_ASSERT(rlen == filelen);
+
+    resp = upload_object(host, bucket, obj_key, buf, rlen,
             ak, sk, NULL, headers, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
@@ -261,6 +333,8 @@ void TEST_UPLOAD_OBJECT_WITH_ACL(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
+    free(buf);
+    buf = NULL;
 
     resp = delete_object(host, bucket, obj_key,
             ak, sk, NULL, &error);

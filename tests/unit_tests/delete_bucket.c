@@ -27,7 +27,7 @@ void TEST_DELETE_BUCKET(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* bucket = "unit-test-delete-bucket1";
+    const char* bucket = "bucket-test-for-delete1";
 
     resp = create_bucket(host, bucket,
             ak, sk, NULL, &error);
@@ -47,7 +47,7 @@ void TEST_DELETE_BUCKET_NOT_EXIST(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* bucket = "unit-test-delete-bucket-exist";
+    const char* bucket = "bucket-test-for-delete2";
 
     resp = delete_bucket(host, bucket,
             ak, sk, NULL, &error);
@@ -60,7 +60,7 @@ void TEST_DELETE_BUCKET_NOT_EMPTY(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* bucket = "unit-test-delete-bucket-not-empty";
+    const char* bucket = "bucket-test-for-delete3";
     // create bucket first
     resp = create_bucket(host, bucket,
             ak, sk, NULL, &error);

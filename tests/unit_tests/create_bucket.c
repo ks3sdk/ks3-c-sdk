@@ -23,7 +23,7 @@ void TEST_CREATE_BUCKET(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* bucket = "unit-test-create-bucket1";
+    const char* bucket = "bucket-test-for-create1";
 
     resp = create_bucket(host, bucket,
             ak, sk, NULL, &error);
@@ -48,7 +48,7 @@ void TEST_CREATE_BUCKET_EXIST(void) {
     int error;
     buffer* resp = NULL;
 
-    const char* bucket = "unit-test-create-bucket-exist";
+    const char* bucket = "bucket-test-for-create2";
 
     resp = create_bucket(host, bucket,
             ak, sk, NULL, &error);
@@ -92,7 +92,7 @@ void TEST_CREATE_BUCKET_WITH_BLANK_HOST_NAME(void) {
     buffer* resp = NULL;
 
     const char* s_host = NULL;
-    const char* bucket = "unit-test-bucket-blank-host";
+    const char* bucket = "bucket-test-for-create3";
 
     resp = create_bucket(s_host, bucket,
             ak, sk, NULL, &error);

@@ -21,8 +21,10 @@ int clean_suite1(void) {
     return 0;
 }
 
-const char* host = "kss.ksyun.com";
-const char* bucket = "c-bucket1";
+//const char* host = "kss.ksyun.com";
+const char* host = "ks3-cn-beijing.ksyun.com";
+//const char* bucket = "c-bucket1";
+const char* bucket = "bucket-test-for-delete-object";
 
 void TEST_DEL_OBJ() {
     int error;
@@ -31,6 +33,11 @@ void TEST_DEL_OBJ() {
     const char* filename = "./lib/libcunit.a";
 
     // upload obj first
+    resp = delete_object(host, bucket, obj_key, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(204 == resp->status_code || 404 == resp->status_code);
+    buffer_free(resp);
+
     resp = upload_file_object(host, bucket, obj_key, filename,
             ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
@@ -49,8 +56,13 @@ void TEST_DEL_OBJ_NOT_EXIST(void) {
     buffer* resp = NULL;
     const char* obj_key = "not-exist-obj";
     int error;
-    resp = delete_object(host, bucket, obj_key,
-            ak, sk, NULL, &error);
+
+    resp = delete_object(host, bucket, obj_key, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(204 == resp->status_code || 404 == resp->status_code);
+    buffer_free(resp);
+
+    resp = delete_object(host, bucket, obj_key, ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     buffer_free(resp);
@@ -61,10 +73,11 @@ void TEST_DEL_OBJ_WITH_BLANK_BUCKET_NAME(void) {
     const char* s_bucket = NULL;
     const char* obj_key = "not-exist-obj";
     int error;
+
     resp = delete_object(host, s_bucket, obj_key,
             ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
-    CU_ASSERT(405 == resp->status_code);
+    CU_ASSERT(405 == resp->status_code); // Request method 'DELETE' not supporte''
     if (resp->status_code != 405) {
         printf("\nstatus code=%d\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
@@ -74,9 +87,19 @@ void TEST_DEL_OBJ_WITH_BLANK_BUCKET_NAME(void) {
 
 void TEST_DEL_OBJ_WITH_BLANK_OBJECT_NAME(void) {
     buffer* resp = NULL;
-    const char* obj_key = NULL;
     int error;
-    resp = delete_object(host, bucket, obj_key,
+
+    const char* obj_key = "unit-test-delete-object";
+    const char* filename = "./lib/libcunit.a";
+
+    resp = upload_file_object(host, bucket, obj_key, filename,
+            ak, sk, NULL, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(200 == resp->status_code);
+    buffer_free(resp);
+
+    const char* blank_obj_key = NULL;
+    resp = delete_object(host, bucket, blank_obj_key,
             ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(409 == resp->status_code);
@@ -84,6 +107,11 @@ void TEST_DEL_OBJ_WITH_BLANK_OBJECT_NAME(void) {
         printf("\nstatus code=%d\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
     }
+    buffer_free(resp);
+
+    resp = delete_object(host, bucket, obj_key, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(204 == resp->status_code);
     buffer_free(resp);
 }
 
@@ -95,7 +123,7 @@ void TEST_DEL_OBJ_WITH_BLANK_BUCKET_NAME_AND_OBJECT_NAME(void) {
     resp = delete_object(host, s_bucket, obj_key,
             ak, sk, NULL, &error);
     CU_ASSERT(0 == error);
-    CU_ASSERT(405 == resp->status_code);
+    CU_ASSERT(405 == resp->status_code); // Request method 'DELETE' not supporte''
     if (resp->status_code != 405) {
         printf("\nstatus code=%d\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
@@ -157,6 +185,11 @@ int main() {
         printf("[ERROR] load ak, sk failed\n");
         return ret;
     }
+    ret = CreateBucket(host, bucket);
+    if (ret != 0) {
+        printf("[ERROR] create bucket failed\n");
+        return ret;
+    }
     CU_pSuite pSuite = NULL;
 
     /* initialize the CUnit test registry */
@@ -195,5 +228,12 @@ int main() {
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
     CU_cleanup_registry();
+
+    /*
+    ret = DeleteBucket(host, bucket);
+    if (ret != 0) {
+        printf("[ERROR] delete bucket failed\n");
+    }
+    */
     return CU_get_error();
 }
