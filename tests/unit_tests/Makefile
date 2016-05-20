@@ -3,11 +3,10 @@ CC = gcc -g
 CFLAGES = -I ./ -I ./include -I ../../include -O2
 LIBS = -L ./lib -lcunit -L ../../lib -lks3sdk -lcurl
 SRCS := $(wildcard *.c)
-OBJS := $(patsubst %.c, %.o, ${SRCS})
+OBJS := $(patsubst %.c, %.o, $(SRCS))
+ORI_TARGET := $(patsubst %.o, %, $(OBJS))
+TARGET := $(filter-out load_key, $(ORI_TARGET))
 
-TARGET = list_object delete_bucket create_bucket upload_obj \
-		 list_bucket delete_object example copy_object upload_file_obj \
-		 list_multipart_uploads
 RM = rm -rf
 
 all:$(TARGET)

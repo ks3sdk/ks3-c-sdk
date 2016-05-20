@@ -7,10 +7,8 @@ LIBS = -L ../lib -lks3sdk -lcurl
 SRCS := $(wildcard *.c)
 OBJS := $(patsubst %.c, %.o, ${SRCS})
 LIBOBJS := $(filter-out main.o , $(OBJS))
+TARGET := $(patsubst %.c, %, ${SRCS})
 
-TARGET = create_bucket delete_bucket upload_object \
-		 download_object delete_object copy_object \
-		 list_objects list_multipart_uploads 
 RM = rm -rf
 
 all:$(TARGET)
