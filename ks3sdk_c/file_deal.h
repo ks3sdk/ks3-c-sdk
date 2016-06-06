@@ -33,6 +33,7 @@ static void file_deal_down(void *handler, FILE* file, buffer* resp);
 extern void file_down(void *handler, FILE* file, buffer* resp);
 extern void file_up(void *handler, FILE* file, curl_off_t size, buffer* resp);
 extern void buf_up(void *handler, BufData* buf_data, curl_off_t size, buffer* resp);
+extern void buf_down(void *handler, buffer* resp);
 
 #ifdef __cplusplus
 }

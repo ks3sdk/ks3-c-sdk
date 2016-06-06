@@ -4,8 +4,9 @@
 #include <string.h>
 #include "buffer.h"
 
-#define BUFFER_PIECE_SIZE        64
-#define BUFFER_MAX_REUSE_SIZE    (4 * 1024)
+#define BUFFER_PIECE_SIZE       64
+#define BUFFER_MAX_REUSE_SIZE   (4 * 1024)
+#define CONTENT_PIECE_SIZE      512000
 
 buffer* buffer_init(void) {
     buffer* b;
@@ -15,6 +16,7 @@ buffer* buffer_init(void) {
 
     b->status_code = -1;
     memset(b->status_msg, '\0', sizeof(b->status_msg));
+    b->content_length = -1;
 
     b->header = NULL;
     b->header_used = 0;
@@ -23,6 +25,10 @@ buffer* buffer_init(void) {
     b->body = NULL;
     b->body_used = 0;
     b->body_size = 0;
+
+    b->content = NULL;
+    b->content_used = 0;
+    b->content_size = 0;
 
     return b;
 }
@@ -37,6 +43,10 @@ void buffer_free(buffer* b) {
     if (b->body != NULL) {
         free(b->body);
         b->body = NULL;
+    }
+    if (b->content != NULL) {
+        free(b->content);
+        b->content = NULL;
     }
     free(b);
     b = NULL;
@@ -108,6 +118,38 @@ int buffer_body_append_string_len(buffer* b, const char* s, size_t len) {
     b->body_used += len;
 
     b->body[b->body_used] = '\0';
+
+    return len;
+}
+
+int buffer_content_prepare_append(buffer* b, size_t size) {
+    if (!b) return -1;
+    if (0 == size) return 0;
+
+    if (0 == b->content_size) {
+        b->content_size = size;
+        b->content_size += CONTENT_PIECE_SIZE - (b->content_size % CONTENT_PIECE_SIZE);
+        b->content = (char *)malloc(b->content_size);
+        assert(b->content);
+    } else if (b->content_used + size > b->content_size) {
+        b->content_size += size;
+        b->content_size += CONTENT_PIECE_SIZE - (b->content_size % CONTENT_PIECE_SIZE);
+        b->content = (char *)realloc(b->content, b->content_size);
+        assert(b->content);
+    }
+
+    return 0;
+}
+
+int buffer_content_append_len(buffer* b, const char* s, size_t len) {
+    if (!b) return -1;
+	if (!s) return -2;
+    if (0 == len) return 0;
+
+    buffer_content_prepare_append(b, len);
+
+    memcpy(b->content + b->content_used, s, len);
+    b->content_used += len;
 
     return len;
 }

@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "api.h"
 
 int load_key();
@@ -9,6 +13,7 @@ void api_test_bucket_relative();
 void api_test_object_relative();
 void api_test_buf_relative();
 void api_test_copy_object();
+void api_test_download_object_to_buffer();
 
 char ak[100] = { '\0' };
 char sk[100] = { '\0' };
@@ -19,10 +24,13 @@ int main()
     if (ret != 0) {
         return -1;
     }
+    /*
 	api_test_bucket_relative();
 	api_test_object_relative();
 	api_test_buf_relative();
 	api_test_copy_object();
+	*/
+	api_test_download_object_to_buffer();
 	
 	//system("pause");
 	return 0;
@@ -329,4 +337,36 @@ void api_test_copy_object() {
     printf("copy_object status code=%d\n", resp->status_code);
     printf("copy_object status msg=%s\n", resp->status_msg);
     printf("copy_object err msg=%s\n", resp->body);
+
+    // free memory
+    buffer_free(resp);
+}
+
+void api_test_download_object_to_buffer() {
+    int error;
+    buffer* resp = NULL;
+
+    char* host = "kss.ksyun.com";
+    char* bucket = "c-bucket1";
+    char* object_key = "file1";
+    char* save_file = "./download_obj_save";
+    resp = download_object(host, bucket, object_key, ak, sk, NULL, NULL, &error);
+    printf("download_object curl error=%d\n", error);
+    printf("download_object status code=%d\n", resp->status_code);
+    printf("download_object status msg=%s\n", resp->status_msg);
+    printf("download_object err msg=%s\n", resp->body);
+    if (resp->content_length > 0 &&
+            (resp->status_code == 200 || resp->status_code == 206)) {
+        printf("object content_length=%d\n", resp->content_length);
+        // save file
+        int fd = open(save_file, O_CREAT | O_RDWR);
+        int ret;
+        assert(fd > 0);
+        ret = pwrite(fd, resp->content, resp->content_length, 0);
+        assert(ret == resp->content_length);
+        close(fd);
+    }
+
+    // free memory
+    buffer_free(resp);
 }

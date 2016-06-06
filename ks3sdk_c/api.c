@@ -79,6 +79,16 @@ buffer* upload_object(const char* host, const char* bucket,
     return resp;
 }
 
+extern buffer* download_object(const char* host, const char* bucket,
+    const char* object_key, const char* access_key, const char* secret_key,
+    const char* query_args, const char* headers, int* err) {
+    buffer* resp = NULL;
+    resp = buffer_init();
+    make_header_buf(host, GET_METHOD, bucket, object_key, NULL,
+            -1, query_args, headers, access_key, secret_key, resp, err);
+    return resp;
+}
+
 buffer* delete_object(const char* host,
 	const char* bucket, const char* object_key,
 	const char* access_key, const char* secret_key,
@@ -117,12 +127,3 @@ buffer* copy_object(const char* host, const char* src_bucket,
 	return resp;
 }
 
-buffer* list_multipart_uploads(const char* host, const char* bucket,
-    const char* access_key, const char* secret_key,
-    const char* query_args, const char* headers, int* err) {
-	buffer* resp = NULL;
-	resp = buffer_init();
-	make_header(host, GET_METHOD, bucket, NULL, NULL, query_args, headers,
-		access_key, secret_key, resp, err);
-	return resp;
-}

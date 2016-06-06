@@ -4,7 +4,7 @@ CFLAGES = -I ./curl -O2
 LIBS = -L ./lib -lcurl
 SRCS := $(wildcard *.c)
 OBJS := $(patsubst %.c, %.o, ${SRCS})
-LIBOBJS := $(filter-out main.o , $(OBJS))
+LIBOBJS := $(filter-out example.o , $(OBJS))
 
 TARGET = ks3demo
 RM = rm -rf
@@ -18,7 +18,7 @@ install:
 	mkdir -p ../lib/
 	mkdir -p ../include/
 	cp api.h buffer.h ../include/
-	mv libks3sdk.a ../lib/
+	cp libks3sdk.a ../lib/
 	cp ./lib/* ../lib/
 
 $(TARGET):$(OBJS)

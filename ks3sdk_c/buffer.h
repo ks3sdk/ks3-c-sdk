@@ -21,7 +21,12 @@ struct buffer_s {
 
     char* body;
     size_t body_used;
-    size_t body_size;                                                                                                 
+    size_t body_size;
+
+    char* content;
+    int64_t content_length;
+    size_t content_used;
+    size_t content_size;
 };
 
 extern buffer* buffer_init(void);
@@ -32,6 +37,9 @@ extern int buffer_header_append_string_len(buffer* b, const char* s, size_t len)
 
 extern int buffer_body_prepare_append(buffer* b, size_t size);
 extern int buffer_body_append_string_len(buffer* b, const char* s, size_t len);
+
+extern int buffer_content_prepare_append(buffer* b, size_t size);
+extern int buffer_content_append_len(buffer* b, const char* s, size_t len);
 
 #ifdef __cplusplus
 }

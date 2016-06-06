@@ -144,3 +144,24 @@ void buf_up(void *handler, BufData* buf_data, curl_off_t size, buffer* resp) {
     curl_easy_setopt(handler, CURLOPT_WRITEFUNCTION, read_s3_response);
     curl_easy_setopt(handler, CURLOPT_WRITEDATA, resp);
 }
+
+static size_t write_buf(void *ptr, size_t size, size_t nmemb, void *resp) {
+    int ret;
+    size_t num_bytes = size * nmemb;
+    buffer* content = (buffer*)resp;
+    ret = buffer_content_append_len(content, (const char*)ptr, num_bytes);
+    return num_bytes;
+}
+
+void buf_down(void *handler, buffer* resp) {
+    // set conn time and transfer time
+    curl_easy_setopt(handler, CURLOPT_CONNECTTIMEOUT, 10 * 1000);
+    curl_easy_setopt(handler, CURLOPT_TIMEOUT_MS, 20 * 60 * 1000);
+    // read body
+    curl_easy_setopt(handler, CURLOPT_WRITEFUNCTION, write_buf);
+    curl_easy_setopt(handler, CURLOPT_WRITEDATA, resp);
+    // read header
+    curl_easy_setopt(handler, CURLOPT_HEADERFUNCTION,
+            read_http_header_resp);
+    curl_easy_setopt(handler, CURLOPT_HEADERDATA, resp);
+}

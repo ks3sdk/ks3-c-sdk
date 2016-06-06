@@ -57,10 +57,12 @@ static char* make_url(const char* host, const char* bucket_name,
 }
 
 static const char* HTTP = "HTTP";
+static const char* CONTENT_LENGTH= "Content-Length";
 static void parse_http_header(CURL* handler, buffer* resp) {
 	char* token = NULL;
 	char* out_ptr = NULL;
 	char header_copy[201] = { '\0' };
+	char content_len_str[100] = { '\0' };
 	char* first_space = NULL;
 	char* sec_space = NULL;
 
@@ -81,14 +83,36 @@ static void parse_http_header(CURL* handler, buffer* resp) {
 #ifdef __linux__
 	token = strtok_r(header_copy, "\r\n", &out_ptr);
 #endif
-	 // 2.2 split "HTTP/xxxx status_code status_msg" by space
-    first_space = strstr(token, " ");
-    if (first_space == NULL) {
-        return;
+    while (token != NULL) {
+        if (strncmp(HTTP, token, strlen(HTTP)) == 0) {
+            // 2.2 split "HTTP/xxxx status_code status_msg" by space
+            first_space = strstr(token, " ");
+            if (first_space == NULL) {
+                return;
+            }
+            sec_space = strstr(first_space + 1, " ");
+            // 2.3 copy status msg
+            strcat(resp->status_msg, sec_space + 1);
+        } else if (strncmp(CONTENT_LENGTH, token, strlen(CONTENT_LENGTH)) == 0) {
+            first_space = strstr(token, ": ");
+            if (first_space == NULL) {
+                return;
+            }   
+            strcat(content_len_str, first_space + 2); 
+            if (strlen(content_len_str) > 0) {
+                resp->content_length = strtol(content_len_str, NULL, 10);
+            }
+            break;
+        }
+        first_space = NULL;
+        sec_space = NULL;
+#ifdef _WIN32
+        token = strtok_s(NULL, "\r\n", &out_ptr);    
+#endif
+#ifdef __linux__
+        token = strtok_r(NULL, "\r\n", &out_ptr);
+#endif
     }
-	sec_space = strstr(first_space + 1, " ");
-    // 2.3 copy status msg
-    strcat(resp->status_msg, sec_space + 1);
 }
 
 FILE* up_file_preprocess(MethodType method_type, const char* data,
@@ -114,12 +138,12 @@ FILE* up_file_preprocess(MethodType method_type, const char* data,
     return file;
 }
 
-void* up_buf_preprocess(MethodType method_type, BufData* data,
+void* buf_preprocess(MethodType method_type, BufData* data,
         CURL* handler, buffer* resp) {
     if (method_type == PUT_METHOD) {
         buf_up(handler, data, data->len, resp);
     } else if (method_type == GET_METHOD) {
-        // TODO
+        buf_down(handler, resp);
     }
 }
 
@@ -182,7 +206,7 @@ static int make_header_common(const char* host, MethodType method_type,
 			buf_data.data = data;
 			buf_data.offset = 0;
 			buf_data.len = buf_len;
-			up_buf_preprocess(method_type, &buf_data, handler, resp);
+			buf_preprocess(method_type, &buf_data, handler, resp);
 		} else {
 			meta_deal(handler, NULL, resp, 0);
 		}
