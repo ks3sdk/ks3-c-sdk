@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
     buffer* resp = NULL;
 
     resp = download_file_object(host, bucket, object_key, filename,
-            ak, sk, NULL, &error);
+            ak, sk, NULL, NULL, &error);
     if (error != 0) {
         printf("curl error=%d\n", error);
         return error;

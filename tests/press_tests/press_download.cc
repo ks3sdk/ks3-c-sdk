@@ -22,7 +22,7 @@ void Ks3Downloader::HandleFile(const string& local_file,
     buffer* resp = download_file_object(ks3_api_info_.host.c_str(),
             ks3_api_info_.bucket.c_str(), object_key.c_str(),
             save_file, ks3_api_info_.access_key.c_str(),
-            ks3_api_info_.secret_key.c_str(), NULL, &curl_err);
+            ks3_api_info_.secret_key.c_str(), NULL, NULL, &curl_err);
     int64_t t2 = TimeUtil::GetTime();
     if (curl_err != 0) {
         printf("[FAIL]seq=%d, network failure, file=%s, error=%d, ut=%ld us\n",
