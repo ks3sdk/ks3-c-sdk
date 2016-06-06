@@ -167,7 +167,7 @@ void TEST_DOWNLOAD_OBJECT(void) {
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
 
-    compute_buf_md5(resp->content, resp->content_used, download_buf_md5_str);
+    compute_buf_md5(resp->content, resp->content_length, download_buf_md5_str);
     char file_md5_str[MD5_STR_LEN + 1];
     compute_file_md5(filename, file_md5_str);
     int ret = strncmp(file_md5_str, download_buf_md5_str, MD5_STR_LEN + 1);
@@ -350,11 +350,9 @@ int main() {
     CU_cleanup_registry();
 
 
-    /*
     ret = DeleteBucket(host, bucket);
     if (ret != 0) {
         printf("[ERROR] delete bucket failed\n");
     }
-    */
     return CU_get_error();
 }
