@@ -138,7 +138,7 @@ FILE* up_file_preprocess(MethodType method_type, const char* data,
     return file;
 }
 
-void* buf_preprocess(MethodType method_type, BufData* data,
+void buf_preprocess(MethodType method_type, BufData* data,
         CURL* handler, buffer* resp) {
     if (method_type == PUT_METHOD) {
         buf_up(handler, data, data->len, resp);
