@@ -229,11 +229,9 @@ int main() {
     CU_basic_run_tests();
     CU_cleanup_registry();
 
-    /*
     ret = DeleteBucket(host, bucket);
     if (ret != 0) {
         printf("[ERROR] delete bucket failed\n");
     }
-    */
     return CU_get_error();
 }
