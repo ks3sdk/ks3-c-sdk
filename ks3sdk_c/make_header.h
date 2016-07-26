@@ -17,7 +17,9 @@ typedef enum {
 typedef enum {
     GET_METHOD = 0,
 	PUT_METHOD,
-	DELETE_METHOD
+	DELETE_METHOD,
+    POST_METHOD,
+    MethodType_END
 } MethodType;
 
 static void set_method(MethodType method_type, void* handler);

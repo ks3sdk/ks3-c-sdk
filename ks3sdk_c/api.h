@@ -43,10 +43,40 @@ extern buffer* delete_object(const char* host,
 	const char* query_args, int* err);
 
 extern buffer* copy_object(const char* host, const char* src_bucket,
-        const char* src_object_key, const char* dst_bucket,
-        const char* dst_object_key, const char* access_key,
-        const char* secret_key, const char* query_args,
-        const char* headers, int* err);
+    const char* src_object_key, const char* dst_bucket,
+    const char* dst_object_key, const char* access_key,
+    const char* secret_key, const char* query_args,
+    const char* headers, int* err);
+
+extern buffer* init_multipart_upload(const char* host, 
+    const char* bucket, const char* object_key,
+    const char* access_key, const char* secret_key, 
+    const char* query_args, const char* headers, int* err);
+
+extern buffer* upload_part(const char* host, const char* 
+    bucket, const char* object_key,
+    const char* access_key, const char* secret_key, 
+    const char* buf_data, int buf_len,
+    const char* query_args, const char* headers, int* err);
+
+extern buffer* completa_multipart_upload(const char* host, 
+    const char* bucket, const char* object_key,
+    const char* access_key, const char* secret_key, 
+    const char* query_args, const char* headers, int* err);
+
+extern buffer* abort_multipart_upload(const char* host, 
+    const char* bucket, const char* object_key,
+    const char* access_key, const char* secret_key, 
+    const char* query_args, const char* headers, int* err);
+
+extern buffer* list_multipart_uploads(const char* host, const char* bucket, 
+    const char* access_key, const char* secret_key, 
+    const char* query_args, const char* headers, int* err);
+
+extern buffer* list_parts(const char* host, 
+    const char* bucket, const char* object_key,
+    const char* access_key, const char* secret_key, 
+    const char* query_args, const char* headers, int* err);
 
 #ifdef __cplusplus
 }

@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "sign.h"
+#include "make_header.h"
 
 static const char* SUB_RESOURCES[15]={"acl", "lifecycle", "location", "logging", "notification", "partNumber", \
 	"policy", "requestPayment", "torrent", "uploadId", "uploads", "versionId", \
@@ -329,7 +330,7 @@ extern char* make_origin_sign(int method_type,
 	const char* query_args, const char* headers,
 	const char* time, char* origin_sign) {
 
-	static const char* method[3] = {"GET", "PUT", "DELETE"};
+	static const char* method[MethodType_END] = {"GET", "PUT", "DELETE", "POST"};
 	struct rb_node_t* root = NULL;
 	key_value kv;
 	rb_node_t* md5_node = NULL;

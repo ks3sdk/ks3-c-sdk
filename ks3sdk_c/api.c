@@ -127,3 +127,83 @@ buffer* copy_object(const char* host, const char* src_bucket,
 	return resp;
 }
 
+
+
+buffer* init_multipart_upload(const char* host,
+    const char* bucket, const char* object_key,
+    const char* access_key, const char* secret_key,
+    const char* query_args, const char* headers, int* err)
+{
+    buffer* resp = NULL;
+    resp = buffer_init();
+    make_header(host, POST_METHOD, bucket, object_key, NULL, query_args, 
+        headers, access_key, secret_key, resp, err);
+    return resp;
+}
+
+buffer* upload_part(const char* host, const char*
+    bucket, const char* object_key,
+    const char* access_key, const char* secret_key,
+    const char* buf_data, int buf_len,
+    const char* query_args, const char* headers, int* err)
+{
+    buffer* resp = NULL;
+    resp = buffer_init();
+    make_header_buf(host, PUT_METHOD, bucket, object_key, buf_data, buf_len, 
+        query_args, headers, access_key, secret_key, resp, err);
+
+    return resp;
+}
+
+buffer* completa_multipart_upload(const char* host,
+    const char* bucket, const char* object_key,
+    const char* access_key, const char* secret_key,
+    const char* query_args, const char* headers, int* err)
+{
+    buffer* resp = NULL;
+    resp = buffer_init();
+    make_header(host, POST_METHOD, bucket, object_key, NULL, query_args, 
+        headers, access_key, secret_key, resp, err);
+
+    return resp;
+}
+
+buffer* abort_multipart_upload(const char* host,
+    const char* bucket, const char* object_key,
+    const char* access_key, const char* secret_key,
+    const char* query_args, const char* headers, int* err)
+{
+    buffer* resp = NULL;
+    resp = buffer_init();
+    make_header(host, DELETE_METHOD, bucket, object_key, NULL, query_args, 
+        headers, access_key, secret_key, resp, err);
+
+    return resp;
+}
+
+buffer* list_multipart_uploads(const char* host, const char* bucket,
+    const char* access_key, const char* secret_key,
+    const char* query_args, const char* headers, int* err)
+{
+    buffer* resp = NULL;
+    resp = buffer_init();
+    make_header(host, GET_METHOD, bucket, NULL, NULL, query_args, headers, 
+        access_key, secret_key, resp, err);
+
+    return resp;
+}
+
+buffer* list_parts(const char* host,
+    const char* bucket, const char* object_key,
+    const char* access_key, const char* secret_key,
+    const char* query_args, const char* headers, int* err)
+{
+    buffer* resp = NULL;
+    resp = buffer_init();
+    make_header(host, GET_METHOD, bucket, object_key, NULL, query_args, headers, 
+        access_key, secret_key, resp, err);
+
+    return resp;
+}
+
+
