@@ -136,13 +136,12 @@ buffer* init_multipart_upload(const char* host,
 {
     buffer* resp = NULL;
     resp = buffer_init();
-    make_header(host, POST_METHOD, bucket, object_key, NULL, query_args, 
+    make_multiparts(host, POST_METHOD, bucket, object_key, NULL, -1, query_args, 
         headers, access_key, secret_key, resp, err);
     return resp;
 }
 
-buffer* upload_part(const char* host, const char*
-    bucket, const char* object_key,
+buffer* upload_part(const char* host, const char* bucket, const char* object_key,
     const char* access_key, const char* secret_key,
     const char* buf_data, int buf_len,
     const char* query_args, const char* headers, int* err)
@@ -158,11 +157,12 @@ buffer* upload_part(const char* host, const char*
 buffer* completa_multipart_upload(const char* host,
     const char* bucket, const char* object_key,
     const char* access_key, const char* secret_key,
+    const char* buf_data, int buf_len,
     const char* query_args, const char* headers, int* err)
 {
     buffer* resp = NULL;
     resp = buffer_init();
-    make_header(host, POST_METHOD, bucket, object_key, NULL, query_args, 
+    make_multiparts(host, POST_METHOD, bucket, object_key, buf_data, buf_len, query_args, 
         headers, access_key, secret_key, resp, err);
 
     return resp;

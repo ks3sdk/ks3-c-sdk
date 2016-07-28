@@ -15,6 +15,9 @@ static void set_method(MethodType method_type, void* handler) {
 		break;
 	case DELETE_METHOD:
 		curl_easy_setopt(handler, CURLOPT_CUSTOMREQUEST, "DELETE");
+        break;
+    case POST_METHOD:
+        curl_easy_setopt(handler, CURLOPT_POST, 1L);
 		break;
 	}
 }
@@ -190,10 +193,16 @@ static int make_header_common(const char* host, MethodType method_type,
 	if (headers != NULL) {
         http_header = curl_slist_append(http_header, headers);
     }
+    
+    if (method_type == POST_METHOD) {
+        curl_easy_setopt(handler, CURLOPT_POSTFIELDS, query_args);
+        //curl_easy_setopt(handler, CURLOPT_POSTFIELDSIZE, 0);
+    }
 	// 6. curl set op
 	curl_easy_setopt(handler, CURLOPT_URL, url);
     set_method(method_type, handler);
     curl_easy_setopt(handler, CURLOPT_HTTPHEADER, http_header);
+
 	// 7. curl perform
 	BufData buf_data;
 	do {
@@ -207,9 +216,11 @@ static int make_header_common(const char* host, MethodType method_type,
 			buf_data.offset = 0;
 			buf_data.len = buf_len;
 			buf_preprocess(method_type, &buf_data, handler, resp);
-		} else {
+		} else if (op_type == META_OP) {
 			meta_deal(handler, NULL, resp, 0);
-		}
+		} else {
+            multipart_deal(handler, (void *)data, buf_len, resp);
+        }
 		res = curl_easy_perform(handler);
         if (res == CURLE_OK) {
             parse_http_header(handler, resp);
@@ -248,4 +259,12 @@ void make_header_buf(const char* host, MethodType method_type, const char* bucke
     buffer* resp, int* err) {
     *err = make_header_common(host, method_type, bucket, object,
         buf, buf_len, query_args, headers, BUF_OP, access_key, secret_key, resp);
+}
+
+void make_multiparts(const char* host, MethodType method_type, const char* bucket,
+    const char* object, const char* buf_data, int buf_len, const char* query_args,
+    const char* headers, const char* access_key, const char* secret_key,
+    buffer* resp, int* err) {
+    *err = make_header_common(host, method_type, bucket, object,
+        buf_data, buf_len, query_args, headers, MULTI_OP, access_key, secret_key, resp);
 }

@@ -358,6 +358,8 @@ extern char* make_origin_sign(int method_type,
     if (type_node != NULL
 		&& type_node->kv != NULL && type_node->kv->value != NULL) {
         strcat(origin_sign, type_node->kv->value);
+    } else if (method_type == POST_METHOD) {
+        strcat(origin_sign, "application/x-www-form-urlencoded");
     }
     strcat(origin_sign, "\n");
     // 5. append: ${date_time}\n

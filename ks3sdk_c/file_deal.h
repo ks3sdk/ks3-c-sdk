@@ -28,6 +28,10 @@ static void meta_deal_up(void *handler, void* ptr, size_t size);
 static void meta_deal_down(void *handler, buffer* resp);
 extern void meta_deal(void *handler, void* ptr, buffer* resp, size_t size);
 
+static void multipart_deal_up(void *handler, void* ptr, size_t size);
+static void multipart_deal_down(void *handler, buffer* resp);
+extern void multipart_deal(void *handler, void* ptr, size_t size, buffer* resp);
+
 static void file_deal_up(void *handler, FILE* file, curl_off_t size, buffer* resp);
 static void file_deal_down(void *handler, FILE* file, buffer* resp);
 extern void file_down(void *handler, FILE* file, buffer* resp);

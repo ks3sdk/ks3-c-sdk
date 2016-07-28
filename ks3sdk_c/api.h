@@ -62,6 +62,7 @@ extern buffer* upload_part(const char* host, const char*
 extern buffer* completa_multipart_upload(const char* host, 
     const char* bucket, const char* object_key,
     const char* access_key, const char* secret_key, 
+    const char* buf_data, int buf_len,
     const char* query_args, const char* headers, int* err);
 
 extern buffer* abort_multipart_upload(const char* host, 

@@ -58,6 +58,39 @@ static void meta_deal_down(void *handler, buffer* resp) {
     //curl_easy_setopt(handler, CURLOPT_VERBOSE, 1);
 }
 
+void meta_deal(void *handler, void* ptr, buffer* resp, size_t size) {
+    meta_deal_up(handler, ptr, size);
+    meta_deal_down(handler, resp);
+}
+
+static void multipart_deal_up(void *handler, void* ptr, size_t size) {
+    // set conn time and transfer time
+    curl_easy_setopt(handler, CURLOPT_CONNECTTIMEOUT, 10 * 1000);
+    curl_easy_setopt(handler, CURLOPT_TIMEOUT_MS, 20 * 60 * 1000);
+    // set read function and file
+    //curl_easy_setopt(handler, CURLOPT_READFUNCTION, &read_s3_string_data);
+    //curl_easy_setopt(handler, CURLOPT_READDATA, ptr);
+    //curl_easy_setopt(handler, CURLOPT_INFILESIZE, size);
+}
+
+static void multipart_deal_down(void *handler, buffer* resp) {
+    // read header
+    curl_easy_setopt(handler, CURLOPT_HEADERFUNCTION, read_http_header_resp);
+    curl_easy_setopt(handler, CURLOPT_HEADERDATA, resp);
+    // read body
+    curl_easy_setopt(handler, CURLOPT_WRITEFUNCTION, read_s3_response);
+    curl_easy_setopt(handler, CURLOPT_WRITEDATA, resp);
+    /*
+     * if set CURLOPT_VERSION as non-zero value,
+     * show req header and resp header info in stdout
+     * */
+    //curl_easy_setopt(handler, CURLOPT_VERBOSE, 1);
+}
+
+void multipart_deal(void *handler, void* ptr, size_t size, buffer* resp) {
+    multipart_deal_up(handler, ptr, size);
+    multipart_deal_down(handler, resp);
+}
 static void file_deal_up(void *handler, FILE* file,
         curl_off_t size, buffer* resp) {
     // set conn time and transfer time
@@ -99,10 +132,7 @@ static void file_deal_down(void *handler, FILE* file, buffer* resp) {
     //curl_easy_setopt(handler, CURLOPT_VERBOSE, 1);
 }
 
-void meta_deal(void *handler, void* ptr, buffer* resp, size_t size) {
-    meta_deal_up(handler, ptr, size);
-    meta_deal_down(handler, resp);
-}
+
 
 void file_up(void *handler, FILE* file, curl_off_t size, buffer* resp) {
     file_deal_up(handler, file, size, resp);
