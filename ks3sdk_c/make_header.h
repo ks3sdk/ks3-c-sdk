@@ -13,6 +13,7 @@ typedef enum {
     FILE_OP,
     BUF_OP,
     MULTI_OP,
+    MULTI_COMPLETE_OP,
     OpType_END
 } OpType;
 
@@ -47,7 +48,7 @@ extern void make_header_buf(const char* host, MethodType method_type,
     const char* secret_key, buffer* resp, int* err);
 extern void make_multiparts(const char* host, MethodType method_type, 
     const char* bucket, const char* object, const char* buf_data, int buf_len, 
-    const char* query_args, const char* headers, const char* access_key, 
+    const char* query_args, const char* headers, OpType op_type, const char* access_key,
     const char* secret_key, buffer* resp, int* err);
 
 #ifdef __cplusplus

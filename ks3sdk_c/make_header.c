@@ -218,9 +218,17 @@ static int make_header_common(const char* host, MethodType method_type,
 			buf_preprocess(method_type, &buf_data, handler, resp);
 		} else if (op_type == META_OP) {
 			meta_deal(handler, NULL, resp, 0);
-		} else {
-            multipart_deal(handler, (void *)data, buf_len, resp);
+		} else if (op_type == MULTI_OP) {
+            multipart_deal(handler, NULL, 0, resp);
         }
+        else if (op_type == MULTI_COMPLETE_OP) {
+            buf_data.data = data;
+            buf_data.offset = 0;
+            buf_data.len = buf_len;
+            buf_up(handler, &buf_data, buf_data.len, resp);
+            multipart_deal_down(handler, resp);
+        }
+
 		res = curl_easy_perform(handler);
         if (res == CURLE_OK) {
             parse_http_header(handler, resp);
@@ -263,8 +271,8 @@ void make_header_buf(const char* host, MethodType method_type, const char* bucke
 
 void make_multiparts(const char* host, MethodType method_type, const char* bucket,
     const char* object, const char* buf_data, int buf_len, const char* query_args,
-    const char* headers, const char* access_key, const char* secret_key,
+    const char* headers, OpType op_typeconst,  char* access_key, const char* secret_key,
     buffer* resp, int* err) {
     *err = make_header_common(host, method_type, bucket, object,
-        buf_data, buf_len, query_args, headers, MULTI_OP, access_key, secret_key, resp);
+        buf_data, buf_len, query_args, headers, op_typeconst, access_key, secret_key, resp);
 }
