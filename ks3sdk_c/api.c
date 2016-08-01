@@ -127,8 +127,6 @@ buffer* copy_object(const char* host, const char* src_bucket,
 	return resp;
 }
 
-
-
 buffer* init_multipart_upload(const char* host,
     const char* bucket, const char* object_key,
     const char* access_key, const char* secret_key,
@@ -154,7 +152,7 @@ buffer* upload_part(const char* host, const char* bucket, const char* object_key
     return resp;
 }
 
-buffer* completa_multipart_upload(const char* host,
+buffer* complete_multipart_upload(const char* host,
     const char* bucket, const char* object_key,
     const char* access_key, const char* secret_key,
     const char* buf_data, int buf_len,
