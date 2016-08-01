@@ -12,7 +12,7 @@
 #include "api.h"
 
 int load_ak_sk() {
-    char* key_file = "/home/hanbing1/key";
+    char* key_file = "/home/wuxinhua/key_test_sdk";
     FILE* fp = NULL;
     fp = fopen(key_file, "r");
     if (fp == NULL) {

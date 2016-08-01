@@ -73,7 +73,7 @@ static void multipart_deal_up(void *handler, void* ptr, size_t size) {
     //curl_easy_setopt(handler, CURLOPT_INFILESIZE, size);
 }
 
-static void multipart_deal_down(void *handler, buffer* resp) {
+void multipart_deal_down(void *handler, buffer* resp) {
     // read header
     curl_easy_setopt(handler, CURLOPT_HEADERFUNCTION, read_http_header_resp);
     curl_easy_setopt(handler, CURLOPT_HEADERDATA, resp);

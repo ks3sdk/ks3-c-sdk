@@ -1,6 +1,6 @@
 CC = gcc -g 
 #CC = g++ -g 
-CFLAGES = -I ./curl -O2
+CFLAGES = -I ./curl# -O2
 LIBS = -L ./lib -lcurl
 SRCS := $(wildcard *.c)
 OBJS := $(patsubst %.c, %.o, ${SRCS})

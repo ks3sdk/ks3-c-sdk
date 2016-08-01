@@ -192,16 +192,22 @@ static int make_header_common(const char* host, MethodType method_type,
     http_header = curl_slist_append(http_header, "Accept:");
 	if (headers != NULL) {
         http_header = curl_slist_append(http_header, headers);
+    } else if (method_type == POST_METHOD) {
+
+        http_header = curl_slist_append(http_header, "Content-Type: text/plain;charset=UTF-8");
     }
     
-    if (method_type == POST_METHOD) {
-        curl_easy_setopt(handler, CURLOPT_POSTFIELDS, query_args);
-        //curl_easy_setopt(handler, CURLOPT_POSTFIELDSIZE, 0);
-    }
 	// 6. curl set op
 	curl_easy_setopt(handler, CURLOPT_URL, url);
     set_method(method_type, handler);
     curl_easy_setopt(handler, CURLOPT_HTTPHEADER, http_header);
+    
+    if (method_type == POST_METHOD) {
+        curl_easy_setopt(handler, CURLOPT_POSTFIELDS, data);
+        if (buf_len < 0)
+            buf_len = 0;
+        curl_easy_setopt(handler, CURLOPT_POSTFIELDSIZE, buf_len);
+    }
 
 	// 7. curl perform
 	BufData buf_data;
@@ -218,16 +224,16 @@ static int make_header_common(const char* host, MethodType method_type,
 			buf_preprocess(method_type, &buf_data, handler, resp);
 		} else if (op_type == META_OP) {
 			meta_deal(handler, NULL, resp, 0);
-		} else if (op_type == MULTI_OP) {
+		} else /*if (op_type == MULTI_OP)*/ {
             multipart_deal(handler, NULL, 0, resp);
         }
-        else if (op_type == MULTI_COMPLETE_OP) {
-            buf_data.data = data;
-            buf_data.offset = 0;
-            buf_data.len = buf_len;
-            buf_up(handler, &buf_data, buf_data.len, resp);
-            multipart_deal_down(handler, resp);
-        }
+        //else if (op_type == MULTI_COMPLETE_OP) {
+        //    buf_data.data = data;
+        //    buf_data.offset = 0;
+        //    buf_data.len = buf_len;
+        //    buf_up(handler, &buf_data, buf_data.len, resp);
+        //    //multipart_deal_down(handler, resp);
+        //}
 
 		res = curl_easy_perform(handler);
         if (res == CURLE_OK) {
@@ -268,11 +274,11 @@ void make_header_buf(const char* host, MethodType method_type, const char* bucke
     *err = make_header_common(host, method_type, bucket, object,
         buf, buf_len, query_args, headers, BUF_OP, access_key, secret_key, resp);
 }
-
-void make_multiparts(const char* host, MethodType method_type, const char* bucket,
-    const char* object, const char* buf_data, int buf_len, const char* query_args,
-    const char* headers, OpType op_typeconst,  char* access_key, const char* secret_key,
-    buffer* resp, int* err) {
+void make_multiparts(const char* host, MethodType method_type, 
+    const char* bucket, const char* object, const char* buf_data, int buf_len, 
+    const char* query_args, const char* headers, OpType op_type, const char* access_key,
+    const char* secret_key, buffer* resp, int* err){
     *err = make_header_common(host, method_type, bucket, object,
-        buf_data, buf_len, query_args, headers, op_typeconst, access_key, secret_key, resp);
+        buf_data, buf_len, query_args, headers, op_type, access_key, secret_key, resp);
 }
+

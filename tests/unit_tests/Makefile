@@ -1,6 +1,6 @@
 CC = gcc -g 
 #CC = g++ -g 
-CFLAGES = -I ./ -I ./include -I ../../ks3sdk_c -I ../../ks3sdk_c/curl # -O2
+CFLAGES = -I ./ -I ./include -I ../../ks3sdk_c -I ../../ks3sdk_c/curl# -O2
 LIBS = -L ./lib -lcunit -L ../../ks3sdk_c -lks3sdk -L ../../ks3sdk_c/lib -lcurl
 SRCS := $(wildcard *.c)
 OBJS := $(patsubst %.c, %.o, $(SRCS))
