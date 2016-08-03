@@ -14,10 +14,11 @@
     <ProjectGuid>{7C04FD59-5FAF-4F53-A2CD-AB64D7395C02}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ks3sdk_c</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v140</PlatformToolset>
@@ -92,7 +93,6 @@
     <ClCompile Include="api.c" />
     <ClCompile Include="buffer.c" />
     <ClCompile Include="file_deal.c" />
-    <ClCompile Include="main.c" />
     <ClCompile Include="make_header.c" />
     <ClCompile Include="md5.c" />
     <ClCompile Include="rb_tree.c" />

@@ -134,7 +134,7 @@ buffer* init_multipart_upload(const char* host,
 {
     buffer* resp = NULL;
     resp = buffer_init();
-    make_multiparts(host, POST_METHOD, bucket, object_key, NULL, -1, query_args, 
+    make_multiparts(host, POST_METHOD, bucket, object_key, NULL, 0, query_args, 
         headers, MULTI_OP, access_key, secret_key, resp, err);
     return resp;
 }

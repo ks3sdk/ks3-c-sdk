@@ -178,9 +178,9 @@ void TEST_DOWNLOAD_OBJECT(void) {
     }
     printf("\nheaders=%s\n", resp->header);
     printf("body=%s\n", resp->body);
-    printf("content->used=%d\n", resp->content_used);
-    printf("content->size=%d\n", resp->content_size);
-    printf("content->length=%d\n", resp->content_length);
+    printf("content->used=%lu\n", resp->content_used);
+    printf("content->size=%lu\n", resp->content_size);
+    printf("content->length=%ld\n", resp->content_length);
     buffer_free(resp);
 
     // delete object
@@ -221,9 +221,9 @@ void TEST_DOWNLOAD_OBJECT_NOT_EXIST(void) {
     }
     printf("\nheaders=%s\n", resp->header);
     printf("body=%s\n", resp->body);
-    printf("content->used=%d\n", resp->content_used);
-    printf("content->size=%d\n", resp->content_size);
-    printf("content->length=%d\n", resp->content_length);
+    printf("content->used=%lu\n", resp->content_used);
+    printf("content->size=%lu\n", resp->content_size);
+    printf("content->length=%ld\n", resp->content_length);
     buffer_free(resp);
 
     resp = delete_object(host, bucket, obj_key,

@@ -136,7 +136,7 @@ void TEST_DELETE_BUCKET_WITH_BLANK_NAME(void) {
     CU_ASSERT(0 == error);
     CU_ASSERT(405 == resp->status_code);
     if (405 != resp->status_code) {
-        printf("\nstatus code=%d\n", resp->status_code);
+        printf("\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
     }
     buffer_free(resp);

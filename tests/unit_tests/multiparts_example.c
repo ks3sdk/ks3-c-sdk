@@ -59,7 +59,7 @@ void TEST_LIST_PARTS(void) {
     // 1. init_multipart
     resp = init_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
     if (200 != resp->status_code) {
-        printf("create_bucket:\nstatus code=%d\n", resp->status_code);
+        printf("create_bucket:\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
         printf("error msg=%s\n", resp->body);
         buffer_free(resp);

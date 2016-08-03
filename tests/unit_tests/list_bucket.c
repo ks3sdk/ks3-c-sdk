@@ -32,7 +32,7 @@ void TEST_LIST_ALL_BUCKETS(void) {
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (200 != resp->status_code) {
-        printf("\nstatus code=%d\n", resp->status_code);
+        printf("\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
         printf("error msg=%s\n", resp->body);
     }
@@ -60,7 +60,7 @@ void TEST_LIST_BUCKET_SK_INVALID() {
     resp = list_all_bucket(host, ak, secret_key, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(403 == resp->status_code);
-    printf("status code=%d\n", resp->status_code);
+    printf("status code=%ld\n", resp->status_code);
     printf("status msg=%s\n", resp->status_msg);
     printf("error msg=%s\n", resp->body);
     buffer_free(resp);

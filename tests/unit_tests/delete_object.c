@@ -79,7 +79,7 @@ void TEST_DEL_OBJ_WITH_BLANK_BUCKET_NAME(void) {
     CU_ASSERT(0 == error);
     CU_ASSERT(405 == resp->status_code); // Request method 'DELETE' not supporte''
     if (resp->status_code != 405) {
-        printf("\nstatus code=%d\n", resp->status_code);
+        printf("\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
     }
     buffer_free(resp);
@@ -104,7 +104,7 @@ void TEST_DEL_OBJ_WITH_BLANK_OBJECT_NAME(void) {
     CU_ASSERT(0 == error);
     CU_ASSERT(409 == resp->status_code);
     if (resp->status_code != 409) {
-        printf("\nstatus code=%d\n", resp->status_code);
+        printf("\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
     }
     buffer_free(resp);
@@ -125,7 +125,7 @@ void TEST_DEL_OBJ_WITH_BLANK_BUCKET_NAME_AND_OBJECT_NAME(void) {
     CU_ASSERT(0 == error);
     CU_ASSERT(405 == resp->status_code); // Request method 'DELETE' not supporte''
     if (resp->status_code != 405) {
-        printf("\nstatus code=%d\n", resp->status_code);
+        printf("\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
     }
     buffer_free(resp);

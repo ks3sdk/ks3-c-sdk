@@ -30,7 +30,7 @@ void TEST_CREATE_BUCKET(void) {
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (200 != resp->status_code) {
-        printf("status code=%d\n", resp->status_code);
+        printf("status code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
         printf("error msg=%s\n", resp->body);
     }
@@ -81,7 +81,7 @@ void TEST_CREATE_BUCKET_WITH_BLANK_BUCKET_NAME(void) {
     CU_ASSERT(0 == error);
     CU_ASSERT(405 == resp->status_code);
     if (405 != resp->status_code) {
-        printf("\nstatus code=%d\n", resp->status_code);
+        printf("\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
     }
     buffer_free(resp);

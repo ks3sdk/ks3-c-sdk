@@ -227,13 +227,6 @@ static int make_header_common(const char* host, MethodType method_type,
 		} else /*if (op_type == MULTI_OP)*/ {
             multipart_deal(handler, NULL, 0, resp);
         }
-        //else if (op_type == MULTI_COMPLETE_OP) {
-        //    buf_data.data = data;
-        //    buf_data.offset = 0;
-        //    buf_data.len = buf_len;
-        //    buf_up(handler, &buf_data, buf_data.len, resp);
-        //    //multipart_deal_down(handler, resp);
-        //}
 
 		res = curl_easy_perform(handler);
         if (res == CURLE_OK) {

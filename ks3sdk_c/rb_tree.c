@@ -277,7 +277,8 @@ rb_node_t* rb_erase_compare(key_value* kv, rb_node_t* root,
 
     if (!(node = rb_search_auxiliary_compare(kv, root,
 		NULL, compare_func))) {
-        printf("key %d is not exist!\n"); 
+        //printf("key %d is not exist!\n");
+        printf("key is not exist!\n");
         return root; 
     }
 

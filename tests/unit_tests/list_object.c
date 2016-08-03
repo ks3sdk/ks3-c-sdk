@@ -33,7 +33,7 @@ void TEST_LIST_OBJECT_BUCKET_EMPTY(void) {
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (200 != resp->status_code) {
-        printf("\nstatus code=%d\n", resp->status_code);
+        printf("\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
         printf("error msg=%s\n", resp->body);
     }
@@ -57,7 +57,7 @@ void TEST_LIST_OBJECT_BUCKET_NOT_EMPTY(void) {
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (200 != resp->status_code) {
-        printf("\nstatus code=%d\n", resp->status_code);
+        printf("\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
         printf("error msg=%s\n", resp->body);
     }

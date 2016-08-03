@@ -12,7 +12,7 @@
 #include "api.h"
 
 int load_ak_sk() {
-    char* key_file = "/home/wuxinhua/key_test_sdk";
+    char* key_file = "/tmp/key_test_sdk";
     FILE* fp = NULL;
     fp = fopen(key_file, "r");
     if (fp == NULL) {
@@ -40,7 +40,7 @@ int CreateBucket(const char* host, const char* bucket) {
         return error;
     }
     if (resp->status_code != 200 && resp->status_code != 409) {
-        printf("status code=%d\n", resp->status_code);
+        printf("status code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
         printf("error msg=%s\n", resp->body);
         buffer_free(resp);
@@ -59,7 +59,7 @@ int DeleteBucket(const char* host, const char* bucket) {
         return error;
     }
     if (resp->status_code != 204 && resp->status_code != 404) {
-        printf("status code=%d\n", resp->status_code);
+        printf("status code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
         printf("error msg=%s\n", resp->body);
         buffer_free(resp);
