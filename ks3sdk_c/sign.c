@@ -175,8 +175,7 @@ static void encode_value(const char* str_source,
     out_str[idx] = '\0';
 }
 
-static void encode_kv_map(rb_node_t* root,
-	int need_code, char* out_str) {
+static void encode_kv_map(rb_node_t* root, int need_code, int sign, char* out_str) {
 	key_value* cur_kv = NULL;
 	char* coded_value = NULL;
 
@@ -184,11 +183,11 @@ static void encode_kv_map(rb_node_t* root,
 		return;
 	}
 	if (root->left != NULL) {
-		encode_kv_map(root->left, need_code, out_str);
+		encode_kv_map(root->left, need_code, sign, out_str);
 	}
 	// encode
 	cur_kv = root->kv;
-	if (exist(SUB_RESOURCES, num_of_sub, cur_kv->key)
+	if (!sign || exist(SUB_RESOURCES, num_of_sub, cur_kv->key)
 		|| exist(RESPONSE_OVERIDES, num_of_rides, cur_kv->key)) {
 	    // join key=coded_value with &
         strcat(out_str, cur_kv->key);
@@ -208,7 +207,7 @@ static void encode_kv_map(rb_node_t* root,
         strcat(out_str, "&");
     }
 	if (root->right != NULL) {
-		encode_kv_map(root->right, need_code, out_str);
+		encode_kv_map(root->right, need_code, sign, out_str);
 	}
 }
 
@@ -221,7 +220,7 @@ char* make_resource_quote(const char* query_args, char* res) {
 	// 1. build query_kv map
 	build_query_kv_map(query_args, &root);
 	// 2. iterate query_kv map and encode value
-	encode_kv_map(root, 1, res);
+	encode_kv_map(root, 1, 0, res);
 	len = strlen(res);
 	if (len > 0) {
 		len = len - 1;
@@ -252,7 +251,7 @@ static void canon_resource(const char* bucket,
 		// 1. build query_kv map
 		build_query_kv_map(query_args, &root);
 		// 2. iterate query_kv map and encode value
-		encode_kv_map(root, 0, new_query_args);
+		encode_kv_map(root, 0, 1, new_query_args);
 		len = strlen(new_query_args);
 		if (len > 0) {
 			len = len -1;

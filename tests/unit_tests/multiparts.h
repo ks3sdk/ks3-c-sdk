@@ -20,7 +20,8 @@ static int b64_encode(const unsigned char* in_buf, int buf_len, char* out) {
     char *beg = out;
 
     int rang = 3 * (buf_len / 3);
-    for (int i = 0; i < rang; i += 3) {
+    int i = 0;
+    for (i = 0; i < rang; i += 3) {
         *out++ = table[in_buf[i] >> 2];
         *out++ = table[((in_buf[i] & 3) << 4) + (in_buf[i + 1] >> 4)];
         *out++ = table[((in_buf[i + 1] & 0x0f) << 2) + (in_buf[i + 2] >> 6)];
@@ -46,10 +47,11 @@ static int b64_encode(const unsigned char* in_buf, int buf_len, char* out) {
 static int b64_decode(const char* in_str, unsigned char *out_buf/*, int *out_len*/) {
     int tmp_len = 0;
     int len = strlen(in_str);
-    for (int i = 0; i < len; i += 4) {
+    int i,j;
+    for (i = 0; i < len; i += 4) {
         int nn[4] = { 0 };
 
-        for (int j = 0; j < 4; ++j) {
+        for (j = 0; j < 4; ++j) {
             if (in_str[i + j] >= 'A' && in_str[i + j] <= 'Z')
                 nn[j] = in_str[i + j] - 'A';
             else if (in_str[i + j] >= 'a' && in_str[i + j] <= 'z')
@@ -276,3 +278,4 @@ RETRY_ONCE:
 
 
 #endif // !_MULTIPARTS_H_
+
