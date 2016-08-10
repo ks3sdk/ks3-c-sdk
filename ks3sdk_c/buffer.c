@@ -87,23 +87,46 @@ int buffer_header_append_string_len(buffer* b, const char* s, size_t len) {
     return len;
 }
 
+//int buffer_body_prepare_append(buffer* b, size_t size) {
+//    if (!b) return -1;
+//    if (0 == size) return 0;
+//    size += 1;
+//
+//    if (0 == b->body_size) {
+//        b->body_size = size;
+//        b->body_size += BUFFER_PIECE_SIZE - (b->body_size % BUFFER_PIECE_SIZE);
+//        b->body = (char *)malloc(b->body_size);
+//        assert(b->body);
+//    } else if (b->body_used + size > b->body_size) {
+//        b->body_size += size;
+//        b->body_size += BUFFER_PIECE_SIZE - (b->body_size % BUFFER_PIECE_SIZE);
+//        b->body = (char *)realloc(b->body, b->body_size);
+//        assert(b->body);
+//    }
+//
+//    return 0;
+//}
 int buffer_body_prepare_append(buffer* b, size_t size) {
+    char *new_ptr = NULL;
+    int  new_size = 0;
+    
     if (!b) return -1;
     if (0 == size) return 0;
     size += 1;
+    
+    if (b->body_used + size > b->body_size) {
+        new_size = b->body_used + size;
+        new_size += BUFFER_MAX_REUSE_SIZE - (b->body_size % BUFFER_MAX_REUSE_SIZE);
 
-    if (0 == b->body_size) {
-        b->body_size = size;
-        b->body_size += BUFFER_PIECE_SIZE - (b->body_size % BUFFER_PIECE_SIZE);
-        b->body = (char *)malloc(b->body_size);
-        assert(b->body);
-    } else if (b->body_used + size > b->body_size) {
-        b->body_size += size;
-        b->body_size += BUFFER_PIECE_SIZE - (b->body_size % BUFFER_PIECE_SIZE);
-        b->body = (char *)realloc(b->body, b->body_size);
-        assert(b->body);
+        new_ptr = (char *)malloc(new_size);
+        assert(new_ptr);
+        if (b->body_used > 0 && b->body)
+            memcpy(new_ptr, b->body, b->body_used);
+        if (b->body) 
+            free(b->body);
+        b->body = new_ptr;
+        b->body_size = new_size;
     }
-
     return 0;
 }
 
