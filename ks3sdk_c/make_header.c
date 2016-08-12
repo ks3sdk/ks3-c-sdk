@@ -181,7 +181,7 @@ static int make_header_common(const char* host, MethodType method_type,
 	strcat(auth, ":");
 	strcat(auth, compute(origin_sign, secret_key, b64));
 	// 4. curl init
-	curl_global_init(CURL_GLOBAL_ALL);
+	//curl_global_init(CURL_GLOBAL_ALL);
     handler = curl_easy_init();
 	// 5. curl header append
 	http_header = curl_slist_append(http_header, gtm);
@@ -193,7 +193,6 @@ static int make_header_common(const char* host, MethodType method_type,
 	if (headers != NULL) {
         http_header = curl_slist_append(http_header, headers);
     } else if (method_type == POST_METHOD) {
-
         http_header = curl_slist_append(http_header, "Content-Type: text/plain;charset=UTF-8");
     }
     
@@ -240,7 +239,7 @@ static int make_header_common(const char* host, MethodType method_type,
 	}
 	// free memory, else memory leak
 	curl_slist_free_all(http_header);
-	curl_global_cleanup();
+	//curl_global_cleanup();
 	return res;
 }
 

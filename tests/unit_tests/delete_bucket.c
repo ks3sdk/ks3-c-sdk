@@ -5,6 +5,9 @@
 #include "api.h"
 #include "./load_key.h"
 
+//const char* host = "ks3-cn-beijing-internal.ksyun.com";
+//const char* host = "ks3-cn-beijing-internal.ksyun.com";
+
 /* The suite initialization function.
  * Opens the temporary file used by the tests.
  * Returns zero on success, non-zero otherwise.
@@ -20,8 +23,6 @@ int init_suite1(void) {
 int clean_suite1(void) {
     return 0;
 }
-
-const char* host = "kss.ksyun.com";
 
 void TEST_DELETE_BUCKET(void) {
     int error;
@@ -147,6 +148,7 @@ void TEST_DELETE_BUCKET_WITH_BLANK_NAME(void) {
  * CUnit error code on failure.
  * */
 int main() {
+    ks3_global_init();
     int ret = load_ak_sk();
     if (ret != 0) {
         printf("[ERROR] load ak, sk failed\n");
@@ -162,6 +164,7 @@ int main() {
     pSuite = CU_add_suite("Suite_1", init_suite1, clean_suite1);
     if (NULL == pSuite) {
         CU_cleanup_registry();
+        ks3_global_destroy();
         return CU_get_error();
     }
 
@@ -175,6 +178,7 @@ int main() {
             CU_add_test(pSuite, "test delete bucket not empty\n",
                 TEST_DELETE_BUCKET_NOT_EMPTY) == NULL) {
         CU_cleanup_registry();
+        ks3_global_destroy();
         return CU_get_error();
     }
 
@@ -182,5 +186,6 @@ int main() {
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
     CU_cleanup_registry();
+    ks3_global_destroy();
     return CU_get_error();
 }

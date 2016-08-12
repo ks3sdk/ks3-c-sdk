@@ -2,10 +2,12 @@
 #include <map>
 #include <vector>
 #include <string.h>
+#include "api.h"
 #include "press_upload.h"
 #include "press_upload_buf.h"
 #include "press_download.h"
 #include "press_delete.h"
+#include "press_multiparts.h"
 
 using std::map;
 using std::vector;
@@ -17,12 +19,14 @@ using ks3_c_sdk::test::Ks3Downloader;
 using ks3_c_sdk::test::Ks3Deleter;
 using ks3_c_sdk::test::Ks3Presser;
 using ks3_c_sdk::test::CountDownLatch;
+using ks3_c_sdk::test::Ks3Multiparts;
 
 Ks3Presser* GetKs3Presser(const string& op);
 
 char ak[100];
 char sk[100];
 int load_key();
+int createbucket(const Ks3ApiInfo& info);
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -30,6 +34,7 @@ int main(int argc, char* argv[]) {
         printf("[Usage] %s press_upload_buf [dir]\n", argv[0]);
         printf("[Usage] %s press_download [dir]\n", argv[0]);
         printf("[Usage] %s press_delete [dir]\n", argv[0]);
+        printf("[Usage] %s press_multiparts [dir]\n", argv[0]);
         return 0;
     }
     string op = argv[1];
@@ -42,10 +47,13 @@ int main(int argc, char* argv[]) {
         return ret;
     }
     Ks3ApiInfo ks3_api_info;
-    ks3_api_info.host = "kss.ksyun.com";
-    ks3_api_info.bucket = "c-bucket1";
+    ks3_api_info.host = "ks3-cn-beijing-internal.ksyun.com";
+    ks3_api_info.bucket = "test-c-sdk-bucket1";
     ks3_api_info.access_key = ak;
     ks3_api_info.secret_key = sk;
+
+    ks3_global_init();
+    createbucket(ks3_api_info);
 
     int count = 10;
     CountDownLatch latch(count);
@@ -64,6 +72,8 @@ int main(int argc, char* argv[]) {
         delete ks3_presser;
         printf("%s seq=%d exit\n", op.c_str(), seq);
     }
+
+    ks3_global_destroy();
     return 0;
 }
 
@@ -76,12 +86,14 @@ Ks3Presser* GetKs3Presser(const string& op) {
         return new Ks3Downloader;
     } else if (op.compare("press_delete") == 0) {
         return new Ks3Deleter;
+    } else if (op.compare("press_multiparts") == 0) {
+        return new Ks3Multiparts;
     }
     return NULL;
 }
 
 int load_key() {
-    char* key_file = "/home/hanbing1/key";
+    const char* key_file = "/tmp/key_test_sdk";
     FILE* fp = NULL;
     fp = fopen(key_file, "r");
     if (fp == NULL) {
@@ -99,3 +111,23 @@ int load_key() {
     fclose(fp);
     return 0;
 }
+
+int createbucket(const Ks3ApiInfo& info) {
+    int ret = 0;
+    buffer* resp = NULL;
+    resp = create_bucket(info.host.c_str(), info.bucket.c_str(), 
+            info.access_key.c_str(), info.secret_key.c_str(), NULL, &ret);
+    if (ret != 0) {
+        return ret;
+    }
+    if (resp->status_code != 200 && resp->status_code != 409) {
+        printf("status code=%ld\n", resp->status_code);
+        printf("status msg=%s\n", resp->status_msg);
+        printf("error msg=%s\n", resp->body);
+        buffer_free(resp);
+        return resp->status_code;
+    }
+    buffer_free(resp);
+    return ret;
+}
+

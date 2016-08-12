@@ -213,7 +213,6 @@ static int multiparts_upload(const char* host, const char* bucket, const char* o
         return -2;
     }
 
-    MD5_CTX md5;
     unsigned char md5_value[16];
     char  base64_buf[32];
     int count = 0;

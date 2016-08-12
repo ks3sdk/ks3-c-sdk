@@ -8,6 +8,9 @@ extern "C" {
 
 #include "buffer.h"
 
+extern int  ks3_global_init();
+extern void ks3_global_destroy();
+
 extern buffer* list_all_bucket(const char* host,
 	const char* access_key, const char* secret_key, int* err);
 extern buffer* list_bucket_objects(const char* host,

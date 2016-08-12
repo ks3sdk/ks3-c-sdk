@@ -8,6 +8,7 @@
 
 char ak[100];
 char sk[100];
+char host[512];
 
 extern int load_ak_sk();
 extern int CreateBucket(const char* host, const char* bucket);

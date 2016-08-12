@@ -22,7 +22,8 @@ int clean_suite1(void) {
 }
 
 //const char* host = "kss.ksyun.com";
-const char* host = "ks3-cn-beijing.ksyun.com";
+//const char* host = "ks3-cn-beijing.ksyun.com";
+//const char* host = "ks3-cn-beijing.ksyun.com";
 
 void TEST_LIST_ALL_BUCKETS(void) {
     int error;
@@ -84,6 +85,7 @@ void TEST_LIST_BUCKET_WITH_BLANK_HOST(void) {
  * CUnit error code on failure.
  * */
 int main() {
+    ks3_global_init();
     int ret = load_ak_sk();
     if (ret != 0) {
         printf("[ERROR] load ak, sk failed\n");
@@ -99,6 +101,7 @@ int main() {
     pSuite = CU_add_suite("Suite_1", init_suite1, clean_suite1);
     if (NULL == pSuite) {
         CU_cleanup_registry();
+        ks3_global_destroy();
         return CU_get_error();
     }
 
@@ -112,6 +115,7 @@ int main() {
             CU_add_test(pSuite, "test list bucket with blank host\n",
                 TEST_LIST_BUCKET_WITH_BLANK_HOST) == NULL) {
         CU_cleanup_registry();
+        ks3_global_destroy();
         return CU_get_error();
     }
 
@@ -119,5 +123,6 @@ int main() {
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
     CU_cleanup_registry();
+    ks3_global_destroy();
     return CU_get_error();
 }

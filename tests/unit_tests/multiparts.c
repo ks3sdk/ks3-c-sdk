@@ -7,9 +7,7 @@
 #include "./load_key.h"
 #include "multiparts.h"
 
-const char* host = "ks3-cn-beijing-internal.ksyun.com";
-//const char *host = "kss.ksyun.com";
-const char* bucket = "bucket-test-for-multiparts01";
+const char* bucket = "bucket-test-for-multiparts05";
 
 const long   FIRST_MIN_PART_SIZE = (5 * 1024 * 1024); 
 const long   SECOND_MIN_PART_SIZE = (100 * 1024); 
@@ -779,9 +777,10 @@ void TEST_LIST_MULTIPARTS(void) {
     char query_str[1024];
     char header_str[1024];
     char upload_id[128] = { 0 };
-    
+    const int obj_num = 1000;
+
     int i = 0;
-    for (i = 0; i < 10000; ++i ) { 
+    for (i = 0; i < obj_num; ++i ) { 
         snprintf(object_key, 1024, "test_multiparts_object_%04d", i);
         snprintf(query_str, 1024, "uploads");
         snprintf(header_str, 1024, "Content-Type: text/plain;charset=UTF-8");
@@ -800,9 +799,9 @@ void TEST_LIST_MULTIPARTS(void) {
     }
 
     int key_num = 0;
-    int buf_size = 20000 * 128;
+    int buf_size = obj_num * 256;
     char *buf = (char*)malloc(buf_size);
-    int  *off_arr = (int *)malloc(20000 * sizeof(int));
+    int  *off_arr = (int *)malloc(obj_num * 2 * sizeof(int));
     char *cur = buf;
 
     // list_multipart_uploads
@@ -881,14 +880,17 @@ void TEST_LIST_MULTIPARTS(void) {
         buffer_free(resp);
     } while (has_next);
 
-    for (i = 0; i < key_num; i+=2) {
+    printf("key_num is %d\n", key_num);
+
+    i = 0; 
+    while ( i < key_num ) {
         // 5. abort_multipart_upload
-        snprintf(object_key, 1024, "%s", buf + off_arr[i]);
-        snprintf(query_str, 1024, "uploadId=%s", buf + off_arr[i+1]);
+        snprintf(object_key, 1024, "%s", buf + off_arr[i++]);
+        snprintf(query_str, 1024, "uploadId=%s", buf + off_arr[i++]);
 
         resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
         if (resp->status_code != 204) {
-            printf("test abort_multipart_upload:\n");
+            printf("test abort_multipart_upload: i = %d\n", i - 2);
             printf("status code = %ld\n", resp->status_code);
             printf("status msg = %s\n", resp->status_msg);
             printf("error msg = %s\n", resp->body);
@@ -926,9 +928,10 @@ void TEST_LIST_MULTIPARTS_01(void) {
     char *upload_ptr = NULL;
     char *upload_end = NULL;
     int   upload_len = 0;
+    const int obj_num = 1000;
     int i = 0;
     
-    for (i = 0; i < 10000; ++i ) { 
+    for (i = 0; i < obj_num; ++i ) { 
         snprintf(object_key, 1024, "test_multiparts_object_1%04d", i);
         snprintf(query_str, 1024, "uploads");
         snprintf(header_str, 1024, "Content-Type: text/plain;charset=UTF-8");
@@ -1025,6 +1028,7 @@ void TEST_LIST_MULTIPARTS_01(void) {
  * CUnit error code on failure.
  * */
 int main() {
+    ks3_global_init();
     test_base64();
 
     int ret = load_ak_sk();
@@ -1049,6 +1053,7 @@ int main() {
     pSuite = CU_add_suite("Suite_1", init_suite1, clean_suite1);
     if (NULL == pSuite) {
         CU_cleanup_registry();
+        ks3_global_destroy();
         return CU_get_error();
     }
 
@@ -1061,6 +1066,7 @@ int main() {
         || NULL == CU_add_test(pSuite, "test list multi part\n", TEST_LIST_MULTIPARTS)
         || NULL == CU_add_test(pSuite, "test list multi part plus\n", TEST_LIST_MULTIPARTS_01) ) {
         CU_cleanup_registry();
+        ks3_global_destroy();
         return CU_get_error();
     }
 
@@ -1073,5 +1079,6 @@ int main() {
     if (ret != 0) {
         printf("[ERROR] delete bucket failed\n");
     }
+    ks3_global_destroy();
     return CU_get_error();
 }

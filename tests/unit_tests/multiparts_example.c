@@ -7,7 +7,8 @@
 //#define COMPLETA
 
 //const char* host = "kss.ksyun.com";
-const char* host = "ks3-cn-beijing-internal.ksyun.com";
+//const char* host = "ks3-cn-beijing-internal.ksyun.com";
+//const char* host = "ks3-cn-beijing-internal.ksyun.com";
 const char* bucket = "bucket-test-for-multiparts02";
 
 const int   first_min_part_size = 5 * 1024 * 1024;
@@ -201,6 +202,7 @@ void TEST_LIST_PARTS(void) {
  * CUnit error code on failure.
  * */
 int main() {
+    ks3_global_init();
     int ret = load_ak_sk();
     if (ret != 0) {
         printf("[ERROR] load ak, sk failed\n");
@@ -220,5 +222,6 @@ int main() {
     //if (ret != 0) {
     //    printf("[ERROR] delete bucket failed\n");
     //}
+    ks3_global_destroy();
     return 0;
 }

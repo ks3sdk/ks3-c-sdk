@@ -24,6 +24,13 @@ struct Ks3ApiInfo
     string bucket;
     string access_key;
     string secret_key;
+    Ks3ApiInfo& operator=(const Ks3ApiInfo& one) {
+        host = one.host;
+        bucket = one.bucket;
+        access_key = one.access_key;
+        secret_key = one.secret_key;
+        return *this;
+    }
 };
 
 class CountDownLatch {

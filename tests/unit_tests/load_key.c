@@ -14,19 +14,31 @@
 int load_ak_sk() {
     char* key_file = "/tmp/key_test_sdk";
     FILE* fp = NULL;
+    int len = 0;
     fp = fopen(key_file, "r");
     if (fp == NULL) {
         printf("fopen file=%s failed\n", key_file);
         return -1;
     }
+    
     fgets(ak, 100, fp);
-    int len = strlen(ak);
-    ak[len - 1] = '\0';
+    len = strlen(ak);
+    while (len > 0 && (ak[len - 1] == '\r' || ak[len -1] == '\n'))
+        ak[--len] = 0;
     printf("ak=%s\n", ak);
+    
     fgets(sk, 100, fp);
     len = strlen(sk);
-    sk[len - 1] = '\0';
+    while (len > 0 && (sk[len - 1] == '\r' || sk[len -1] == '\n'))
+        sk[--len] = 0;
     printf("sk=%s\n", sk);
+
+    fgets(host, 512, fp);
+    len = strlen(host);
+    while (len > 0 && (host[len - 1] == '\r' || host[len -1] == '\n'))
+        host[--len] = 0;
+    printf("host=%s\n", host);
+    
     fclose(fp);
     return 0;
 }
