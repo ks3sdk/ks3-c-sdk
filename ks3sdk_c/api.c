@@ -141,8 +141,15 @@ buffer* init_multipart_upload(const char* host,
     const char* access_key, const char* secret_key,
     const char* query_args, const char* headers, int* err) {
     buffer* resp = NULL;
+    char query_buf[1024];
+    
+    if (query_args && strlen(query_args) > 0) 
+        snprintf(query_buf, 1024, "uploads&%s", query_args);
+    else
+        snprintf(query_buf, 1024, "uploads");
+
     resp = buffer_init();
-    make_multiparts(host, POST_METHOD, bucket, object_key, NULL, 0, query_args, 
+    make_multiparts(host, POST_METHOD, bucket, object_key, NULL, 0, query_buf, 
         headers, MULTI_OP, access_key, secret_key, resp, err);
     return resp;
 }
@@ -185,8 +192,15 @@ buffer* list_multipart_uploads(const char* host, const char* bucket,
     const char* access_key, const char* secret_key,
     const char* query_args, const char* headers, int* err) {
     buffer* resp = NULL;
+    char query_buf[1024];
+    
+    if (query_args && strlen(query_args) > 0) 
+        snprintf(query_buf, 1024, "uploads&%s", query_args);
+    else
+        snprintf(query_buf, 1024, "uploads");
+    
     resp = buffer_init();
-    make_header(host, GET_METHOD, bucket, NULL, NULL, query_args, headers, 
+    make_header(host, GET_METHOD, bucket, NULL, NULL, query_buf, headers, 
         access_key, secret_key, resp, err);
     return resp;
 }

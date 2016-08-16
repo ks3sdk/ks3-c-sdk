@@ -152,7 +152,7 @@ void buf_preprocess(MethodType method_type, BufData* data,
 
 static int make_header_common(const char* host, MethodType method_type,
 	const char* bucket, const char* object, const char* data, int buf_len,
-	const char* query_args, const char* headers, OpType op_type,
+	const char* query_args, const char* headers_str, OpType op_type,
 	const char* access_key, const char* secret_key, buffer* resp) {
 	
 	FILE *file = NULL;
@@ -165,7 +165,18 @@ static int make_header_common(const char* host, MethodType method_type,
 	CURLcode res;
 	CURL* handler = NULL;
 	struct curl_slist* http_header = NULL;
+    char *headers = (char*)headers_str;
 
+
+    char header_buf[1024] = {0};
+    if (method_type == POST_METHOD) {
+        if (headers)
+            snprintf(header_buf, 1024, "%s\nContent-Type: text/plain;charset=UTF-8", headers);
+        else
+            snprintf(header_buf, 1024, "Content-Type: text/plain;charset=UTF-8");
+
+        headers = header_buf;
+    }
 	// 1. make url
 	make_url(host, bucket, object, query_args, url);
 	// 2. get time
@@ -192,8 +203,6 @@ static int make_header_common(const char* host, MethodType method_type,
     http_header = curl_slist_append(http_header, "Accept:");
 	if (headers != NULL) {
         http_header = curl_slist_append(http_header, headers);
-    } else if (method_type == POST_METHOD) {
-        http_header = curl_slist_append(http_header, "Content-Type: text/plain;charset=UTF-8");
     }
     
 	// 6. curl set op

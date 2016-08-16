@@ -60,6 +60,7 @@ void test_base64() {
  * Returns zero on success, non-zero otherwise.
  * */
 int init_suite1(void) {
+    printf("%s:%d", __FUNCTION__, __LINE__);
     return 0;
 }
 
@@ -68,6 +69,7 @@ int init_suite1(void) {
  *   * Returns zero on success, non-zero otherwise.
  *    */
 int clean_suite1(void) {
+    printf("%s:%d", __FUNCTION__, __LINE__);
     return 0;
 }
 
@@ -86,7 +88,7 @@ void TEST_MULTIPARTS_COMPLETE_00(void) {
     
 
     // 1. init_multipart
-    resp = init_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
+    resp = init_multipart_upload(host, bucket, object_key, ak, sk, NULL, NULL, &error);
     if (200 != resp->status_code) {
         printf("create_bucket:\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
@@ -119,7 +121,7 @@ void TEST_MULTIPARTS_COMPLETE_00(void) {
     
     // 3. list_multipart_uploads
     snprintf(query_str, 1024, "uploads");
-    resp = list_multipart_uploads(host, bucket, ak, sk, query_str, NULL, &error);
+    resp = list_multipart_uploads(host, bucket, ak, sk, NULL, NULL, &error);
 
     if (resp->status_code != 200) {
         printf("test list_multipart_uploads:\n");
@@ -226,7 +228,7 @@ void TEST_MULTIPARTS_COMPLETE_01(void) {
 
 
     // 1. init_multipart
-    resp = init_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
+    resp = init_multipart_upload(host, bucket, object_key, ak, sk, NULL, NULL, &error);
     if (200 != resp->status_code) {
         printf("create_bucket:\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
@@ -333,7 +335,7 @@ void TEST_MULTIPARTS_ABORT_02(void) {
     strcpy(header_str, "Content-Type: text/plain;charset=UTF-8");
 
     // 1. init_multipart
-    resp = init_multipart_upload(host, bucket, object_key, ak, sk, query_str, header_str, &error);
+    resp = init_multipart_upload(host, bucket, object_key, ak, sk, NULL, header_str, &error);
     if (200 != resp->status_code) {
         printf("create_bucket:\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
@@ -365,7 +367,7 @@ void TEST_MULTIPARTS_ABORT_02(void) {
 
     // 3. list_multipart_uploads
     snprintf(query_str, 1024, "uploads");
-    resp = list_multipart_uploads(host, bucket, ak, sk, query_str, NULL, &error);
+    resp = list_multipart_uploads(host, bucket, ak, sk, NULL, NULL, &error);
 
     if (resp->status_code != 200) {
         printf("test list_multipart_uploads:\n");
@@ -425,7 +427,7 @@ void TEST_LIST_PARTS_03(void) {
     strcpy(header_str, "Content-Type: text/plain;charset=UTF-8");
 
     // 1. init_multipart
-    resp = init_multipart_upload(host, bucket, object_key, ak, sk, query_str, header_str, &error);
+    resp = init_multipart_upload(host, bucket, object_key, ak, sk, NULL, header_str, &error);
     if (200 != resp->status_code) {
         printf("create_bucket:\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
@@ -459,7 +461,7 @@ void TEST_LIST_PARTS_03(void) {
 
     // 3. list_multipart_uploads
     snprintf(query_str, 1024, "uploads");
-    resp = list_multipart_uploads(host, bucket, ak, sk, query_str, NULL, &error);
+    resp = list_multipart_uploads(host, bucket, ak, sk, NULL, NULL, &error);
 
     if (resp->status_code != 200) {
         printf("test list_multipart_uploads:\n");
@@ -578,7 +580,7 @@ void TEST_MULTIPARTS_UPLOAD_DOWNLOAD_04(void) {
     strcpy(header_str, "Content-Type: text/plain;charset=UTF-8");
 
     // 1. init_multipart
-    resp = init_multipart_upload(host, bucket, object_key, ak, sk, query_str, header_str, &error);
+    resp = init_multipart_upload(host, bucket, object_key, ak, sk, NULL, header_str, &error);
     if (200 != resp->status_code) {
         printf("create_bucket:\nstatus code=%ld\n", resp->status_code);
         printf("status msg=%s\n", resp->status_msg);
@@ -777,7 +779,7 @@ void TEST_LIST_MULTIPARTS(void) {
     char query_str[1024];
     char header_str[1024];
     char upload_id[128] = { 0 };
-    const int obj_num = 1000;
+    int obj_num = 1000;
 
     int i = 0;
     for (i = 0; i < obj_num; ++i ) { 
@@ -786,7 +788,7 @@ void TEST_LIST_MULTIPARTS(void) {
         snprintf(header_str, 1024, "Content-Type: text/plain;charset=UTF-8");
 
         // 1. init_multipart
-        resp = init_multipart_upload(host, bucket, object_key, ak, sk, query_str, header_str, &error);
+        resp = init_multipart_upload(host, bucket, object_key, ak, sk, NULL, header_str, &error);
         if (200 != resp->status_code) {
             printf("create_bucket:\nstatus code=%ld\n", resp->status_code);
             printf("status msg=%s\n", resp->status_msg);
@@ -797,9 +799,11 @@ void TEST_LIST_MULTIPARTS(void) {
 
         buffer_free(resp);
     }
+        
+    obj_num = obj_num << 10;
 
     int key_num = 0;
-    int buf_size = obj_num * 256;
+    int buf_size = obj_num * 256 ;
     char *buf = (char*)malloc(buf_size);
     int  *off_arr = (int *)malloc(obj_num * 2 * sizeof(int));
     char *cur = buf;
@@ -937,7 +941,7 @@ void TEST_LIST_MULTIPARTS_01(void) {
         snprintf(header_str, 1024, "Content-Type: text/plain;charset=UTF-8");
 
         // 1. init_multipart
-        resp = init_multipart_upload(host, bucket, object_key, ak, sk, query_str, header_str, &error);
+        resp = init_multipart_upload(host, bucket, object_key, ak, sk, NULL, header_str, &error);
         if (200 != resp->status_code) {
             printf("create_bucket:\nstatus code=%ld\n", resp->status_code);
             printf("status msg=%s\n", resp->status_msg);

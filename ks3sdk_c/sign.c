@@ -108,7 +108,15 @@ static int key_value_compare(key_value* a, key_value* b) {
     if (ret != 0) {
         return ret;
     }
-    return strcmp(a->value, b->value);
+
+    if (a->value == NULL && b->value == NULL)
+        return 0;
+    else if (a->value != NULL && b->value == NULL)
+        return 1;
+    else if (a->value == NULL && b->value != NULL)
+        return -1;
+    else
+        return strcmp(a->value, b->value);
 }
 
 static void build_query_kv_map(const char* query_args, rb_node_t** root) {
@@ -357,8 +365,6 @@ extern char* make_origin_sign(int method_type,
     if (type_node != NULL
 		&& type_node->kv != NULL && type_node->kv->value != NULL) {
         strcat(origin_sign, type_node->kv->value);
-    } else if (method_type == POST_METHOD) {
-        strcat(origin_sign, "text/plain;charset=UTF-8");
     }
     strcat(origin_sign, "\n");
     // 5. append: ${date_time}\n
