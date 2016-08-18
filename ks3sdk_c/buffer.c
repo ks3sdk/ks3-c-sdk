@@ -116,7 +116,7 @@ int buffer_body_prepare_append(buffer* b, size_t size) {
     
     if (b->body_used + size > b->body_size) {
         new_size = b->body_used + size;
-        new_size += BUFFER_MAX_REUSE_SIZE - (b->body_size % BUFFER_MAX_REUSE_SIZE);
+        new_size += BUFFER_MAX_REUSE_SIZE - (new_size % BUFFER_MAX_REUSE_SIZE);
 
         new_ptr = (char *)malloc(new_size);
         assert(new_ptr);

@@ -206,6 +206,11 @@ buffer* upload_part(const char* host, const char* bucket, const char* object_key
     if (check_params(access_key, secret_key, err) != 0) {
         return NULL;
     }
+    if (buf_len > 0 && NULL == buf_data) {
+        fprintf(stderr, "buf_len > 0 but buf_data is null");
+        *err = -2;
+        return NULL;
+    }
     buffer* resp = NULL;
     resp = buffer_init();
     make_header_buf(host, PUT_METHOD, bucket, object_key, buf_data, buf_len, 
