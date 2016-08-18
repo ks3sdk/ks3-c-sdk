@@ -14,9 +14,24 @@ void ks3_global_destroy() {
     curl_global_cleanup();
 }
 
+static int check_params(const char* access_key, const char* secret_key, int* err) {
+    if (err == NULL) {
+        fprintf(stderr, "pointer error is null\n");
+        return -1;
+    }
+    if (access_key == NULL || secret_key == NULL) {
+        fprintf(stderr, "access_key or secret_key is null\n");
+        *err = -1;
+        return -1;
+    }
+    return 0;
+}
 
 buffer* list_all_bucket(const char* host, const char* access_key,
 	const char* secret_key, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
 	buffer* resp = NULL;
 	resp = buffer_init();
 	make_header(host, GET_METHOD, NULL, NULL, NULL, NULL, NULL,
@@ -27,6 +42,9 @@ buffer* list_all_bucket(const char* host, const char* access_key,
 buffer* list_bucket_objects(const char* host,
 	const char* bucket, const char* access_key,
 	const char* secret_key, const char* query_args, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
 	buffer* resp = NULL;
 	resp = buffer_init();
 	make_header(host, GET_METHOD, bucket, NULL, NULL, query_args, NULL,
@@ -37,6 +55,9 @@ buffer* list_bucket_objects(const char* host,
 buffer* create_bucket(const char* host,
 	const char* bucket, const char* access_key,
 	const char* secret_key, const char* query_args, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
 	buffer* resp = NULL;
 	resp = buffer_init();
 	make_header(host, PUT_METHOD, bucket, NULL, NULL, query_args, NULL,
@@ -47,6 +68,9 @@ buffer* create_bucket(const char* host,
 buffer* delete_bucket(const char* host,
 	const char* bucket, const char* access_key,
 	const char* secret_key, const char* query_args, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
 	buffer* resp = NULL;
 	resp = buffer_init();
 	make_header(host, DELETE_METHOD, bucket, NULL, NULL, query_args, NULL,
@@ -59,6 +83,9 @@ buffer* upload_file_object(const char* host,
 	const char* filename, const char* access_key,
 	const char* secret_key, const char* query_args,
 	const char* headers, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
 	buffer* resp = NULL;
 	resp = buffer_init();
 	make_header_file(host, PUT_METHOD, bucket, object_key, filename,
@@ -70,6 +97,9 @@ buffer* download_file_object(const char* host,
 	const char* bucket, const char* object_key, const char* filename,
 	const char* access_key, const char* secret_key, const char* query_args,
 	const char* headers, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
 	buffer* resp = NULL;
 	resp = buffer_init();
 	make_header_file(host, GET_METHOD, bucket, object_key, filename,
@@ -81,6 +111,9 @@ buffer* upload_object(const char* host, const char* bucket,
     const char* object_key, const char* buf_data, int buf_len,
     const char* access_key, const char* secret_key,
     const char* query_args, const char* headers, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
     buffer* resp = NULL;
     resp = buffer_init();
     make_header_buf(host, PUT_METHOD, bucket, object_key, buf_data,
@@ -91,6 +124,9 @@ buffer* upload_object(const char* host, const char* bucket,
 extern buffer* download_object(const char* host, const char* bucket,
     const char* object_key, const char* access_key, const char* secret_key,
     const char* query_args, const char* headers, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
     buffer* resp = NULL;
     resp = buffer_init();
     make_header_buf(host, GET_METHOD, bucket, object_key, NULL,
@@ -102,6 +138,9 @@ buffer* delete_object(const char* host,
 	const char* bucket, const char* object_key,
 	const char* access_key, const char* secret_key,
 	const char* query_args, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
 	buffer* resp = NULL;
 	resp = buffer_init();
 	make_header(host, DELETE_METHOD, bucket, object_key, NULL,
@@ -114,6 +153,9 @@ buffer* copy_object(const char* host, const char* src_bucket,
    const char* dst_object_key, const char* access_key,
    const char* secret_key, const char* query_args,
    const char* headers, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
 	buffer* resp = NULL;
 	resp = buffer_init();
 	char actual_header[1024] = { '\0' };
@@ -140,6 +182,9 @@ buffer* init_multipart_upload(const char* host,
     const char* bucket, const char* object_key,
     const char* access_key, const char* secret_key,
     const char* query_args, const char* headers, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
     buffer* resp = NULL;
     char query_buf[1024];
     
@@ -158,6 +203,9 @@ buffer* upload_part(const char* host, const char* bucket, const char* object_key
     const char* access_key, const char* secret_key,
     const char* buf_data, int buf_len,
     const char* query_args, const char* headers, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
     buffer* resp = NULL;
     resp = buffer_init();
     make_header_buf(host, PUT_METHOD, bucket, object_key, buf_data, buf_len, 
@@ -170,6 +218,9 @@ buffer* complete_multipart_upload(const char* host,
     const char* access_key, const char* secret_key,
     const char* buf_data, int buf_len,
     const char* query_args, const char* headers, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
     buffer* resp = NULL;
     resp = buffer_init();
     make_multiparts(host, POST_METHOD, bucket, object_key, buf_data, buf_len, query_args, 
@@ -181,6 +232,9 @@ buffer* abort_multipart_upload(const char* host,
     const char* bucket, const char* object_key,
     const char* access_key, const char* secret_key,
     const char* query_args, const char* headers, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
     buffer* resp = NULL;
     resp = buffer_init();
     make_header(host, DELETE_METHOD, bucket, object_key, NULL, query_args, 
@@ -191,6 +245,9 @@ buffer* abort_multipart_upload(const char* host,
 buffer* list_multipart_uploads(const char* host, const char* bucket,
     const char* access_key, const char* secret_key,
     const char* query_args, const char* headers, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
     buffer* resp = NULL;
     char query_buf[1024];
     
@@ -209,6 +266,9 @@ buffer* list_parts(const char* host,
     const char* bucket, const char* object_key,
     const char* access_key, const char* secret_key,
     const char* query_args, const char* headers, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
     buffer* resp = NULL;
     resp = buffer_init();
     make_header(host, GET_METHOD, bucket, object_key, NULL, query_args, headers, 

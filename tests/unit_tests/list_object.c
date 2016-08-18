@@ -26,6 +26,24 @@ int clean_suite1(void) {
 //const char* host = "ks3-cn-beijing.ksyun.com";
 const char* bucket = "bucket-test-for-list-object";
 
+void TEST_LIST_OBJECT_BLANK_AK(void) {
+    int error;
+    buffer* resp = NULL;
+
+    resp = list_bucket_objects(host, bucket, NULL, sk, NULL, &error);
+    CU_ASSERT(NULL == resp);
+    CU_ASSERT(-1 == error);
+}
+
+void TEST_LIST_OBJECT_BLANK_SK(void) {
+    int error;
+    buffer* resp = NULL;
+
+    resp = list_bucket_objects(host, bucket, ak, NULL, NULL, &error);
+    CU_ASSERT(NULL == resp);
+    CU_ASSERT(-1 == error);
+}
+
 void TEST_LIST_OBJECT_BUCKET_EMPTY(void) {
     int error;
     buffer* resp = NULL;
@@ -141,8 +159,12 @@ int main() {
     }
 
     /* add the tests to the suite */
-    if (CU_add_test(pSuite, "test list object with bucket empty\n",
-                TEST_LIST_OBJECT_BUCKET_EMPTY) == NULL
+    if (CU_add_test(pSuite, "test list object with blank ak\n",
+                TEST_LIST_OBJECT_BLANK_AK) == NULL
+          || CU_add_test(pSuite, "test list object with blank sk\n",
+                TEST_LIST_OBJECT_BLANK_SK) == NULL
+          || CU_add_test(pSuite, "test list object with bucket empty\n",
+              TEST_LIST_OBJECT_BUCKET_EMPTY) == NULL
           || CU_add_test(pSuite, "test list object with bucket not empty",
               TEST_LIST_OBJECT_BUCKET_NOT_EMPTY) == NULL
           || CU_add_test(pSuite, "test list object with invalid ak\n",
