@@ -9,7 +9,8 @@
 #include <string.h>
 #include "api.h"
 
-char* bj_host = "ks3-cn-beijing.ksyun.com";
+char* bj_host = "ks3-cn-beijing-internal.ksyun.com";
+//char* bj_host = "ks3-cn-beijing.ksyun.com";
 char* hz_host = "kss.ksyun.com";
 char* sh_host = "ks3-cn-shanghai.ksyun.com";
 char* hk_host = "ks3-cn-hk-1.ksyun.com";
@@ -71,7 +72,7 @@ int main(int argc, char* argv[]) {
 
 int load_key() {
     // load_key
-    char* key_file = "/home/hanbing1/key";
+    char* key_file = "/tmp/key_test_sdk";
     FILE* fp = NULL;
     fp = fopen(key_file, "r");
     if (fp == NULL) {
