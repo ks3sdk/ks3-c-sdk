@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
 
 int load_key() {
     // load_key
-    char* key_file = "/home/hanbing1/key";
+    char* key_file = "/tmp/key_test_sdk";
     FILE* fp = NULL;
     fp = fopen(key_file, "r");
     if (fp == NULL) {

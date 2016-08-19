@@ -167,14 +167,13 @@ static int make_header_common(const char* host, MethodType method_type,
 	struct curl_slist* http_header = NULL;
     char *headers = (char*)headers_str;
 
-
-    char header_buf[1024] = {0};
+    char header_buf[1024] = { '\0' };
     if (method_type == POST_METHOD) {
-        if (headers && strlen(headers) > 0)
+        if (headers && strlen(headers) > 0) {
             snprintf(header_buf, 1024, "%s\nContent-Type: text/plain;charset=UTF-8", headers);
-        else
+        } else {
             snprintf(header_buf, 1024, "Content-Type: text/plain;charset=UTF-8");
-
+        }
         headers = header_buf;
     }
 	// 1. make url

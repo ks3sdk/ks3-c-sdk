@@ -58,6 +58,9 @@ int CreateBucket(const char* host, const char* bucket) {
         buffer_free(resp);
         return resp->status_code;
     }
+        printf("status code=%ld\n", resp->status_code);
+        printf("status msg=%s\n", resp->status_msg);
+        printf("error msg=%s\n", resp->body);
     buffer_free(resp);
     return 0;
 }
@@ -80,6 +83,20 @@ int DeleteBucket(const char* host, const char* bucket) {
     buffer_free(resp);
     printf("bucket will actually delete after several minutes(>=5)\n");
     return 0;
+}
+
+void GetUploadId(const char* in_str, char* out_str) {
+    char *oid_beg_ptr = strstr(in_str, "<UploadId>");
+    if (oid_beg_ptr) {
+        oid_beg_ptr += strlen("<UploadId>");
+        char *oid_end_ptr = strstr(oid_beg_ptr, "</UploadId>");
+        if (oid_end_ptr) {
+            strncpy(out_str, oid_beg_ptr, oid_end_ptr - oid_beg_ptr);                                            
+            out_str[oid_end_ptr - oid_beg_ptr] = 0;
+        }
+    }
+    printf("in_str is %s\n", in_str);
+    printf("out_str is %s\n", out_str);
 }
 
 
