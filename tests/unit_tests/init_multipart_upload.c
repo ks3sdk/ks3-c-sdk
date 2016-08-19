@@ -35,7 +35,7 @@ char objectid_str[128];
 char access_key[128];
 char secret_key[128];
 
-const char *bucket = "test-init-multipart-upload";
+const char *bucket = "bucket-test-for-init-multipart-upload";
 
 void TEST_INIT_MULTIPART_UPLOAD_ALL_NULL(void) {
     resp = init_multipart_upload(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
@@ -89,6 +89,18 @@ void TEST_INIT_MULTIPART_UPLOAD_HOST(void) {
         printf("error msg = %s\n", resp->body);            
     }                                                      
     buffer_free(resp);                                                                 
+
+    //resp = delete_object(host, bucket, object_key, ak, sk, NULL, &error);
+    //CU_ASSERT(0 == error);
+    //CU_ASSERT(204 == resp->status_code);
+    //if (resp->status_code != 204) {
+    //    printf("test %s:%d:\n", __FUNCTION__, __LINE__);
+    //    printf("status code = %ld\n", resp->status_code);
+    //    printf("status msg = %s\n", resp->status_msg);
+    //    printf("error msg = %s\n", resp->body);
+    //}
+    //buffer_free(resp);
+
 
     return;
 }
@@ -153,6 +165,18 @@ void TEST_INIT_MULTIPART_UPLOAD_BUCKET(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
+    
+    //resp = delete_object(host, bucket, object_key, ak, sk, NULL, &error);
+    //CU_ASSERT(0 == error);
+    //CU_ASSERT(204 == resp->status_code);
+    //if (resp->status_code != 204) {
+    //    printf("test %s:%d:\n", __FUNCTION__, __LINE__);
+    //    printf("status code = %ld\n", resp->status_code);
+    //    printf("status msg = %s\n", resp->status_msg);
+    //    printf("error msg = %s\n", resp->body);
+    //}
+    //buffer_free(resp);
+    
     return;
 }
 
@@ -256,6 +280,7 @@ void TEST_INIT_MULTIPART_UPLOAD_QUERYPARA(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
+    
 
     snprintf(query_str, 1024, "%s", "uploads");
     resp = init_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
@@ -268,7 +293,17 @@ void TEST_INIT_MULTIPART_UPLOAD_QUERYPARA(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
-
+    
+    resp = init_multipart_upload(host, bucket, object_key, ak, sk, NULL, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(200 == resp->status_code);
+    if (resp->status_code != 200) {
+        printf("test %s:%d:\n", __FUNCTION__, __LINE__);
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    buffer_free(resp);
     return;
 }
 void TEST_INIT_MULTIPART_UPLOAD_HEADERPARA(void) {
@@ -377,10 +412,10 @@ int main() {
     CU_basic_run_tests();
     CU_cleanup_registry();
 
-    //ret = DeleteBucket(host, bucket);
-    //if (ret != 0) {
-    //    printf("[ERROR] delete bucket failed\n");
-    //}
+    ret = DeleteBucket(host, bucket);
+    if (ret != 0) {
+        printf("[ERROR] delete bucket failed\n");
+    }
     
     ks3_global_destroy();
     return CU_get_error();

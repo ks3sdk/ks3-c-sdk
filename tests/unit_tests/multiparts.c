@@ -487,7 +487,7 @@ void TEST_LIST_PARTS_03(void) {
     int print_len = 0;
     char *dat = buf;
 
-    int next_num = 1;
+    int next_num = 0;
     int keep_on = 0;
     int part_num_per = 100;
 
@@ -625,7 +625,7 @@ void TEST_MULTIPARTS_UPLOAD_DOWNLOAD_04(void) {
     int print_len = 0;
     char *dat = buf;
 
-    int next_num = 1;
+    int next_num = 0;
     int keep_on = 0;
 
     print_len = snprintf(dat + dat_len, dat_size - dat_len, "<CompleteMultipartUpload>\n");
@@ -739,7 +739,7 @@ void TEST_LIST_PARTS_05(void) {
     strcpy(header_str, "Content-Type: text/plain;charset=UTF-8");
     strcpy(upload_id, "18c233bab07a49a99c73c54b9ba54296");
 
-    int next_num = 1;
+    int next_num = 0;
     int keep_on = 0;
     int part_num = 1000;
 

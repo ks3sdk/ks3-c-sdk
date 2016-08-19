@@ -35,7 +35,7 @@ char objectid_str[128];
 char access_key[128];
 char secret_key[128];
 
-const char *bucket = "test-upload-part";
+const char *bucket = "bucket-test-for-upload-part";
 
 void TEST_UPLOAD_PART_ALL_NULL(void) {
     resp = upload_part(NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL);
@@ -90,7 +90,18 @@ void TEST_UPLOAD_PART_HOST(void) {
         printf("error msg = %s\n", resp->body);            
     }                                                      
     buffer_free(resp);                                                                 
+    
 
+    resp = delete_object(host, bucket, object_key, ak, sk, NULL, &error);
+    if (resp->status_code != 204) {
+        printf("test delete_object:\n");
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    CU_ASSERT(error == 0);
+    CU_ASSERT(204 == resp->status_code);
+    buffer_free(resp);
     return;
 }
 void TEST_UPLOAD_PART_BUCKET(void) {
@@ -195,6 +206,17 @@ void TEST_UPLOAD_PART_OBJECT(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
+
+    resp = delete_object(host, bucket, object_key, ak, sk, NULL, &error);
+    if (resp->status_code != 204) {
+        printf("test delete_object:\n");
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    CU_ASSERT(error == 0);
+    CU_ASSERT(204 == resp->status_code);
+    buffer_free(resp);
     return;
 }
 void TEST_UPLOAD_PART_KEY(void) {
@@ -233,6 +255,17 @@ void TEST_UPLOAD_PART_KEY(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
+
+    resp = delete_object(host, bucket, object_key, ak, sk, NULL, &error);
+    if (resp->status_code != 204) {
+        printf("test delete_object:\n");
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    CU_ASSERT(error == 0);
+    CU_ASSERT(204 == resp->status_code);
+    buffer_free(resp);
     return;
 }
 void TEST_UPLOAD_PART_QUERYPARA(void) {
@@ -249,6 +282,17 @@ void TEST_UPLOAD_PART_QUERYPARA(void) {
         printf("status msg = %s\n", resp->status_msg);
         printf("error msg = %s\n", resp->body);
     }
+    buffer_free(resp);
+
+    resp = delete_object(host, bucket, object_key, ak, sk, NULL, &error);
+    if (resp->status_code != 204) {
+        printf("test delete_object:\n");
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    CU_ASSERT(error == 0);
+    CU_ASSERT(204 == resp->status_code);
     buffer_free(resp);
     
     snprintf(query_str, 1024, "%s", "uploads");
@@ -290,6 +334,7 @@ void TEST_UPLOAD_PART_QUERYPARA(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
+    
     // HTTP/1.1 400 Bad Request, partNumber is 1 .. 10000
     // <Code>InvalidPartNum</Code><Message>invalid partNum</Message>
     snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", 0, objectid_str);
@@ -340,6 +385,18 @@ void TEST_UPLOAD_PART_QUERYPARA(void) {
     }
     buffer_free(resp);
 
+    snprintf(query_str, 1024, "uploadId=%s", objectid_str);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
+    if (resp->status_code != 204) {
+        printf("test abort_multipart_upload:\n");
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+        return;
+    }
+    CU_ASSERT(error == 0);
+    CU_ASSERT(204 == resp->status_code);
+    buffer_free(resp);
     return;
 }
 
@@ -360,6 +417,18 @@ void TEST_UPLOAD_PART_HEADERPARA(void) {
         printf("error msg = %s\n", resp->body);
     }
     buffer_free(resp);
+
+    resp = delete_object(host, bucket, object_key, ak, sk, NULL, &error);
+    if (resp->status_code != 204) {
+        printf("test delete_object:\n");
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    CU_ASSERT(error == 0);
+    CU_ASSERT(204 == resp->status_code);
+    buffer_free(resp);
+    
     
     snprintf(query_str, 1024, "%s", "uploads");
     resp = init_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
@@ -388,7 +457,6 @@ void TEST_UPLOAD_PART_HEADERPARA(void) {
     snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", 1, objectid_str);
 
     resp = upload_part(host, bucket, object_key, ak, sk, NULL, 10, query_str, NULL, &error);
-    CU_ASSERT(-2 == error);
     CU_ASSERT(NULL == resp);
     
     resp = upload_part(host, bucket, object_key, ak, sk, "1", 10, query_str, NULL, &error);
@@ -442,6 +510,109 @@ void TEST_UPLOAD_PART_HEADERPARA(void) {
     }
     buffer_free(resp);
     
+    snprintf(query_str, 1024, "uploadId=%s", objectid_str);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
+    if (resp->status_code != 204) {
+        printf("test abort_multipart_upload:\n");
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+        return;
+    }
+    CU_ASSERT(error == 0);
+    CU_ASSERT(204 == resp->status_code);
+    buffer_free(resp);
+    
+    return;
+}
+
+void clean(void) {
+    int error;
+    buffer *resp = NULL;
+    buffer *sub_resp = NULL;
+    char object_key[1024];
+    char query_str[1024];
+    char header_str[1024];
+    char upload_id[128] = { 0 };
+    char sub_object_key[1024];
+    char sub_query_str[1024];
+    int max_uploads = 200;
+    char upload_id_marker[1024];
+    char key_marker[1024];
+    int has_next = 0;
+    char *key_ptr = NULL;
+    char *key_end = NULL;
+    int   key_len = 0;
+
+    // list_multipart_uploads
+    snprintf(query_str, 1024, "uploads&max-uploads=%d", max_uploads);
+    do {
+        has_next = 0;
+        upload_id_marker[0] = 0;
+        key_marker[0] = 0;
+
+        resp = list_multipart_uploads(host, bucket, ak, sk, query_str, NULL, &error);
+        if (resp->status_code != 200) {
+            printf("test list_multipart_uploads:\n");
+            printf("status code = %ld\n", resp->status_code);
+            printf("status msg = %s\n", resp->status_msg);
+            printf("error msg = %s\n", resp->body);
+
+        }
+        CU_ASSERT(error == 0);
+        CU_ASSERT(200 == resp->status_code);
+        
+        char *content = resp->body;
+        char *next_key = strstr(content, "<NextKeyMarker>");
+        if (next_key) {
+            next_key += strlen("<NextKeyMarker>");
+            char * end = strstr(next_key, "</NextKeyMarker>");
+            if (end) 
+                snprintf(key_marker, 1024, "%.*s", end - next_key, next_key);
+            
+            char * next_upload_id = strstr(content, "<NextUploadIdMarker>");
+            if (next_upload_id) {
+                next_upload_id += strlen("<NextUploadIdMarker>");
+
+                end = strstr(next_upload_id, "</NextUploadIdMarker>");
+                if (end)
+                    snprintf(upload_id_marker, 1024, "%.*s", end - next_upload_id, next_upload_id);
+            }
+        }
+        if (upload_id_marker[0] != 0 && key_marker[0] != 0) {
+            has_next = 1;
+            snprintf(query_str, 1024, "uploads&max-uploads=%d&key-marker=%s&upload-id-marker=%s", max_uploads, key_marker, upload_id_marker);
+        }
+        key_ptr = strstr(content, "<Key>");
+        while(key_ptr) {
+            key_ptr += strlen("<Key>");
+            key_end = strstr(key_ptr, "</Key>");
+            key_len = key_end - key_ptr;
+            snprintf(sub_object_key, 1024, "%.*s", key_len, key_ptr);
+            
+            key_ptr = strstr(key_end, "<UploadId>");
+            key_ptr += strlen("<UploadId>");
+            key_end = strstr(key_ptr, "</UploadId>");
+            key_len = key_end - key_ptr;
+            snprintf(sub_query_str, 1024, "uploadId=%.*s", key_len, key_ptr);
+
+            sub_resp = abort_multipart_upload(host, bucket, sub_object_key, ak, sk, sub_query_str, NULL, &error);
+            if (sub_resp->status_code != 204) {
+                printf("test %s:%d abort_multipart_upload:\n", __FUNCTION__, __LINE__);
+                printf("status code = %ld\n", sub_resp->status_code);
+                printf("status msg = %s\n", sub_resp->status_msg);
+                printf("error msg = %s\n", sub_resp->body);
+            }
+            CU_ASSERT(error == 0);
+            CU_ASSERT(204 == sub_resp->status_code);
+            buffer_free(sub_resp);
+            
+            key_ptr = strstr(key_end, "<Key>");
+        }
+        
+        buffer_free(resp);
+    } while (has_next);
+
     return;
 }
 
@@ -486,21 +657,23 @@ int main() {
         || NULL == CU_add_test(pSuite, "test upload part para object\n", TEST_UPLOAD_PART_OBJECT)
         || NULL == CU_add_test(pSuite, "test upload part para key\n", TEST_UPLOAD_PART_KEY)
         || NULL == CU_add_test(pSuite, "test upload part para query\n", TEST_UPLOAD_PART_QUERYPARA)
-        || NULL == CU_add_test(pSuite, "test upload part para header\n", TEST_UPLOAD_PART_HEADERPARA)) {
+        || NULL == CU_add_test(pSuite, "test upload part para header\n", TEST_UPLOAD_PART_HEADERPARA)
+        || NULL == CU_add_test(pSuite, "clean bucket\n", clean)) {
         CU_cleanup_registry();
         ks3_global_destroy();
         return CU_get_error();
     }
+    
 
     /* Run all tests using the CUnit Basic interface */
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
     CU_cleanup_registry();
 
-    //ret = DeleteBucket(host, bucket);
-    //if (ret != 0) {
-    //    printf("[ERROR] delete bucket failed\n");
-    //}
+    ret = DeleteBucket(host, bucket);
+    if (ret != 0) {
+        printf("[ERROR] delete bucket failed\n");
+    }
     
     ks3_global_destroy();
     return CU_get_error();

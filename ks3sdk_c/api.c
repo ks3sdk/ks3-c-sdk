@@ -27,6 +27,14 @@ static int check_params(const char* access_key, const char* secret_key, int* err
     return 0;
 }
 
+static int check_buf(const char * buf_data, int buf_len) {
+    if (NULL == buf_data && buf_len > 0) {
+        fprintf(stderr, "buf_len > 0, but buf_data is null\n");
+        return -2;
+    }
+    return 0;
+}
+
 buffer* list_all_bucket(const char* host, const char* access_key,
 	const char* secret_key, int* err) {
     if (check_params(access_key, secret_key, err) != 0) {
@@ -112,6 +120,9 @@ buffer* upload_object(const char* host, const char* bucket,
     const char* access_key, const char* secret_key,
     const char* query_args, const char* headers, int* err) {
     if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
+    if (check_buf(buf_data, buf_len) != 0) {
         return NULL;
     }
     buffer* resp = NULL;
@@ -206,9 +217,7 @@ buffer* upload_part(const char* host, const char* bucket, const char* object_key
     if (check_params(access_key, secret_key, err) != 0) {
         return NULL;
     }
-    if (buf_len > 0 && NULL == buf_data) {
-        fprintf(stderr, "buf_len > 0 but buf_data is null");
-        *err = -2;
+    if (check_buf(buf_data, buf_len) != 0) {
         return NULL;
     }
     buffer* resp = NULL;
@@ -224,6 +233,9 @@ buffer* complete_multipart_upload(const char* host,
     const char* buf_data, int buf_len,
     const char* query_args, const char* headers, int* err) {
     if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
+    if (check_buf(buf_data, buf_len) != 0) {
         return NULL;
     }
     buffer* resp = NULL;
