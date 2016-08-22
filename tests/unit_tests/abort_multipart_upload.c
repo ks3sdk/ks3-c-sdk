@@ -34,7 +34,7 @@ char objectid_str[128];
 char access_key[128];
 char secret_key[128];
 
-const char* bucket = "bucket-test-for-abort-multipart-upload2";
+const char* bucket = "bucket-test-for-abort-multipart-upload";
 
 void TEST_ABORT_MULTIPART_UPLOAD_ALL_NULL(void) {
     buffer *resp = NULL;
@@ -371,10 +371,10 @@ int main() {
     CU_basic_run_tests();
     CU_cleanup_registry();
 
-    //ret = DeleteBucket(host, bucket);
-    //if (ret != 0) {
-    //    printf("[ERROR] delete bucket failed\n");
-    //}
+    ret = DeleteBucket(host, bucket);
+    if (ret != 0) {
+        printf("[ERROR] delete bucket failed\n");
+    }
     
     ks3_global_destroy();
     return CU_get_error();
