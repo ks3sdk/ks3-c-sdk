@@ -421,6 +421,7 @@ void TEST_LIST_PARTS_03(void) {
     char query_str[1024];
     char header_str[1024];
     char upload_id[128] = { 0 };
+    char down_filename[1024];
 
     strcpy(object_key, "test_multiparts_object_03");
     strcpy(query_str, "uploads");
@@ -449,6 +450,7 @@ void TEST_LIST_PARTS_03(void) {
 
     printf("host:%s\nbucket:%s\nobject:%s\nUploadId:%s\n", host, bucket, object_key, upload_id);
 
+    printf("%s:%d %s start multiparts_upload!\n", __FUNCTION__, __LINE__, now_str());
     // 2. upload part
     part_result_node *part_result_arr = NULL;
     int part_result_num = 0;
@@ -536,7 +538,7 @@ void TEST_LIST_PARTS_03(void) {
     print_len = snprintf(dat + dat_len, dat_size - dat_len, "</CompleteMultipartUpload>\n");
     dat_len += print_len;
     snprintf(query_str, 1024, "uploadId=%s", upload_id);    
-    snprintf(header_str, 1024, "Content-Type: application/xml");
+    snprintf(header_str, 1024, "Content-Type: text/xml");
     resp = complete_multipart_upload(host, bucket, object_key, ak, sk, dat, dat_len, query_str, header_str, &error);
     if (resp->status_code != 200) {
         printf("test complete_multipart_upload:\n");
@@ -547,6 +549,35 @@ void TEST_LIST_PARTS_03(void) {
     CU_ASSERT(error == 0);
     CU_ASSERT(200 == resp->status_code);
     buffer_free(resp);
+   
+    printf("%s:%d %s complete_mulitpart_upload ok!\n", __FUNCTION__, __LINE__, now_str());
+
+    const char* tmp = strrchr(filename, '/');
+    tmp += 1;
+    snprintf(down_filename, 1024, "%s.download", tmp);
+    resp = download_file_object(host, bucket, object_key, down_filename, ak, sk, NULL, NULL, &error);
+    if (resp->status_code != 200) {
+        printf("test %s:%d\n", __FUNCTION__, __LINE__);
+        printf("%s:%d %s download_file_object failed!\n", __FUNCTION__, __LINE__, now_str());
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+    }
+    CU_ASSERT(error == 0);
+    CU_ASSERT(200 == resp->status_code);
+    buffer_free(resp);
+
+    printf("%s:%d %s download_file_object ok!\n", __FUNCTION__, __LINE__, now_str());
+
+    char b64_up[64] = {0};
+    char b64_down[64] = {0};
+    compute_file_md5b64(filename, b64_up);
+    compute_file_md5b64(down_filename, b64_down);
+    int cmp_ret = strcmp(b64_up, b64_down);
+    if (cmp_ret == 0) {
+        printf("[ok] %s:%d upload file == download file\n",  __FUNCTION__, __LINE__);
+    }
+    CU_ASSERT(cmp_ret == 0);
+
 
     resp = delete_object(host, bucket, object_key, ak, sk, NULL, &error);
     if (resp->status_code != 204) {

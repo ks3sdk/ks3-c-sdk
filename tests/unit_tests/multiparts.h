@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "CUnit/Basic.h"
 #include "api.h"
 #include "md5.h"
@@ -13,6 +14,82 @@ typedef struct part_result_node {
     int id;
     char etag[ETAG_LEN];
 }part_result_node;
+
+static struct tm* cp_localtime(time_t local_sec, struct tm* local_tm, int time_zone) {
+    const char days[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};  
+
+    time_t now_sec = local_sec;
+
+    local_tm->tm_gmtoff = time_zone * 3600;
+    local_tm->tm_zone = NULL;
+
+    now_sec += local_tm->tm_gmtoff;
+
+    local_tm->tm_wday = ((now_sec / 86400 + 4) % 7);
+
+    local_tm->tm_isdst = 0;
+
+    local_tm->tm_sec = now_sec % 60;
+    now_sec /= 60;
+    local_tm->tm_min = now_sec % 60;
+    now_sec /= 60;
+
+    int four_year_hour_num = (int)(now_sec / 35064); // (365*4 + 1) * 24
+
+    local_tm->tm_year = (four_year_hour_num << 2) + 70;
+    now_sec %= 35064;
+
+    for(;;)
+    {
+        int one_year_hour_num = 8760; // 365 * 24
+        if((local_tm->tm_year & 3) == 0)
+            one_year_hour_num += 24;
+        if(now_sec < one_year_hour_num)
+            break;
+        local_tm->tm_year++;
+        now_sec -= one_year_hour_num;
+    }
+
+    local_tm->tm_hour = now_sec % 24;
+    now_sec /= 24;
+
+    local_tm->tm_yday = (int)now_sec;
+
+    now_sec++;
+    if((local_tm->tm_year & 3) == 0)
+    {
+        if(now_sec > 60)
+            now_sec--;
+        else 
+        {
+            if(now_sec == 60)
+            {
+                local_tm->tm_mon = 1;
+                local_tm->tm_mday = 29;
+                return local_tm;
+            }
+        }
+    }
+
+    for(local_tm->tm_mon = 0; days[local_tm->tm_mon] < now_sec; local_tm->tm_mon++)
+        now_sec -= days[local_tm->tm_mon];
+
+    local_tm->tm_mday = (int)now_sec;
+
+    return local_tm;
+}
+
+static const char* now_str() {
+    struct tm tm_buf;
+    cp_localtime(time(NULL), &tm_buf, 8);
+    char buf[1024];
+
+
+    snprintf(buf, sizeof(buf), "%d-%d-%d %d:%d:%d",
+            tm_buf.tm_year + 1900, tm_buf.tm_mon + 1, tm_buf.tm_mday, tm_buf.tm_hour, tm_buf.tm_min, tm_buf.tm_sec);
+
+    return buf;
+}
 
 static int b64_encode(const unsigned char* in_buf, int buf_len, char* out) {
     const char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
