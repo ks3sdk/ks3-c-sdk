@@ -260,7 +260,7 @@ void TEST_ABORT_MULTIPART_UPLOAD_QUERYPARA(void) {
     // abort
     char query_args[100] = { '\0' };
     snprintf(query_args, 100, " uploadId=%s", uploadId);
-    // invalid http request
+    // invalid http request : has space in query_args
     resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_args, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(400 == resp->status_code);
