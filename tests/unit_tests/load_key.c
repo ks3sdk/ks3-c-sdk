@@ -95,8 +95,6 @@ void GetUploadId(const char* in_str, char* out_str) {
             out_str[oid_end_ptr - oid_beg_ptr] = 0;
         }
     }
-    printf("in_str is %s\n", in_str);
-    printf("out_str is %s\n", out_str);
 }
 
 
