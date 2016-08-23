@@ -125,6 +125,7 @@ FILE* up_file_preprocess(MethodType method_type, const char* data,
     if (method_type == PUT_METHOD) {
         file = fopen(data, "rb");
         if (file == NULL) {
+            fprintf(stderr, "open file %s failed : %m\n", data);
             return file;
         }
         fseek(file, 0, SEEK_END);

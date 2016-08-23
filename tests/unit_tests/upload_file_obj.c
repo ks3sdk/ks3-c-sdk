@@ -61,6 +61,36 @@ void TEST_UPLOAD_FILE_OBJECT(void) {
     buffer_free(resp);
 }
 
+void TEST_UPLOAD_FILE_OBJECT_WITH_FILE_NOT_EXIST(void) {
+    int error;
+    buffer* resp = NULL;
+
+    const char* obj_key = "unit_test_dir/upload_file_obj1_with_file_not_exist";
+    const char* filename = "./lib/libcunit.a.notexist";
+
+    resp = delete_object(host, bucket, obj_key, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(204 == resp->status_code || 404 == resp->status_code);
+    buffer_free(resp);
+
+    resp = upload_file_object(host, bucket, obj_key, filename,
+            ak, sk, NULL, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(-1 == resp->status_code);
+    buffer_free(resp);
+
+    resp = delete_object(host, bucket, obj_key,
+            ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(404 == resp->status_code);
+    if (resp->status_code != 204) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    buffer_free(resp);
+}
+
 void TEST_UPLOAD_FILE_OBJECT_EXIST(void) {
     int error;
     buffer* resp = NULL;
@@ -306,7 +336,9 @@ int main() {
     }
 
     /* add the tests to the suite */
-    if (CU_add_test(pSuite, "test upload file object\n",
+    if (CU_add_test(pSuite, "test upload file object with file not exist",
+                TEST_UPLOAD_FILE_OBJECT_WITH_FILE_NOT_EXIST) == NULL ||
+            CU_add_test(pSuite, "test upload file object\n",
                 TEST_UPLOAD_FILE_OBJECT) == NULL ||
             CU_add_test(pSuite, "test upload file object exist\n",
                 TEST_UPLOAD_FILE_OBJECT_EXIST) == NULL ||
