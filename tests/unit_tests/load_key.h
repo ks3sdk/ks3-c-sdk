@@ -14,4 +14,6 @@ extern int load_ak_sk();
 extern int CreateBucket(const char* host, const char* bucket);
 extern int DeleteBucket(const char* host, const char* bucket);
 extern void GetUploadId(const char* in_str, char* out_str);
+extern const char* CreateBigFile(const char* file, int64_t file_size);
+extern void RemoveFile(const char *file);
 

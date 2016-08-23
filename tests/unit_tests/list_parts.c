@@ -408,12 +408,17 @@ void TEST_LIST_PARTS_KEY(void) {
 }
 
 void TEST_LIST_PARTS_QUERYPARA(void) {
-    const char* filename = "/data/ssd4/liangjianqun/migrate/ks3/all/round3.tar.gz";
+    const char* filename = ".bigfile.tmp";
     int next_num = 0;
     int max_part = 10;
+    int part_num = 0;
     snprintf(object_key, 1024, "%s", __FUNCTION__);    
-    const int part_num = init_list_parts(host, bucket, object_key, filename, uploadid_str);
     
+    int64_t file_size = 500L << 20;
+    CreateBigFile(filename, file_size);
+    part_num = init_list_parts(host, bucket, object_key, filename, uploadid_str);
+    RemoveFile(filename);
+
     resp = list_parts(host, bucket, object_key, ak, sk, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
@@ -508,12 +513,13 @@ void TEST_LIST_PARTS_QUERYPARA(void) {
             char *beg = strstr(par_ptr, "<PartNumber>");
             beg += strlen("<PartNumber>");
             int num = atoi(beg);
-            CU_ASSERT(2 == num);
+            CU_ASSERT(1 == num);
+            //CU_ASSERT(2 == num);
         }        
     }                                                      
     buffer_free(resp);                                                                 
     
-    snprintf(query_str, sizeof(query_str), "uploadId=%s&max-parts=%d&part-number-marker=%d", uploadid_str, max_part, part_num);
+    snprintf(query_str, sizeof(query_str), "uploadId=%s&max-parts=%d&part-number-marker=%d", uploadid_str, max_part, part_num +1);
     resp = list_parts(host, bucket, object_key, ak, sk, query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);

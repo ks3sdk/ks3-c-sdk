@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "./load_key.h"
 #include "api.h"
 
@@ -99,4 +100,41 @@ void GetUploadId(const char* in_str, char* out_str) {
     printf("out_str is %s\n", out_str);
 }
 
+const char* CreateBigFile(const char* file, int64_t file_size) {
+    FILE* fd = NULL;
+    unsigned char buf[4096];
+    int part_num = 0;
+    int i = 0;
 
+    srand((unsigned)time(NULL));
+    for (i = 0; i < part_num; ++i)
+        buf[i] = rand() % 256;
+
+    fd = fopen(file, "wb");
+    while(file_size > 0 ) {
+        if (file_size > sizeof(buf)) 
+            part_num = sizeof(buf);
+        else
+            part_num = file_size;
+        
+        i = rand() % part_num;
+        buf[i] = rand() % 256;
+        
+        fwrite(buf, part_num, 1, fd);
+        file_size -= part_num;        
+    }
+    fclose(fd);
+    return file;
+}
+
+void RemoveFile(const char *file) {
+    int ret = 0;
+    while(access(file, 0) == 0) {
+        ret = remove(file);
+        if (ret) {
+            fprintf(stderr, "remove %s failed!\n", file);
+            sleep(1000);
+        }
+    }
+    return ;
+}

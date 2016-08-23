@@ -9,8 +9,8 @@
 
 const char* bucket = "bucket-test-for-multiparts05";
 
-const long   FIRST_MIN_PART_SIZE = (5 * 1024 * 1024); 
-const long   SECOND_MIN_PART_SIZE = (100 * 1024); 
+const int64_t   FIRST_MIN_PART_SIZE = (5 * 1024 * 1024); 
+const int64_t   SECOND_MIN_PART_SIZE = (100 * 1024); 
 
 
 int encode_md5hex_b64(const char* md5_hex, char *b64) {
@@ -214,7 +214,6 @@ void TEST_MULTIPARTS_COMPLETE_00(void) {
 
 void TEST_MULTIPARTS_COMPLETE_01(void) {
     int error;
-    //const char* filename = "/data/ssd4/liangjianqun/migrate/ks3/all/round1-1.tar.gz";
     const char* filename = "./lib/libcunit.a";
 
     buffer *resp = NULL;
@@ -259,7 +258,7 @@ void TEST_MULTIPARTS_COMPLETE_01(void) {
     CU_ASSERT(part_num == 0);
     
     // complete_multipart_upload
-    long buf_size = 5 * 1024 * 1024;
+    int64_t buf_size = 5 * 1024 * 1024;
     char* buf = (char *)malloc(buf_size);
     if (!buf) {
         printf("[ERROR] alloc memory failed! please review code.");
@@ -413,21 +412,23 @@ void TEST_MULTIPARTS_ABORT_02(void) {
 
 void TEST_LIST_PARTS_03(void) {
     int error;
-    //const char* filename = "./lib/libcunit.a"; 
-    const char* filename = "/data/ssd4/liangjianqun/migrate/ks3/all/round1-2.tar.gz";
+    const char* filename = ".bigfile.tmp";
+    const char* down_filename = ".bigfile.tmp.down";
 
     buffer *resp = NULL;
     char object_key[1024];
     char query_str[1024];
     char header_str[1024];
     char upload_id[128] = { 0 };
-    char down_filename[1024];
+    char now_time_buf[1024];
 
     strcpy(object_key, "test_multiparts_object_03");
     strcpy(query_str, "uploads");
     strcpy(header_str, "Content-Type: text/plain;charset=UTF-8");
 
     // 1. init_multipart
+    int64_t file_size = 2L << 30;
+    CreateBigFile(filename, file_size);
     resp = init_multipart_upload(host, bucket, object_key, ak, sk, NULL, header_str, &error);
     if (200 != resp->status_code) {
         printf("create_bucket:\nstatus code=%ld\n", resp->status_code);
@@ -450,7 +451,7 @@ void TEST_LIST_PARTS_03(void) {
 
     printf("host:%s\nbucket:%s\nobject:%s\nUploadId:%s\n", host, bucket, object_key, upload_id);
 
-    printf("%s:%d %s start multiparts_upload!\n", __FUNCTION__, __LINE__, now_str());
+    printf("%s:%d %s start multiparts_upload!\n", __FUNCTION__, __LINE__, now_str(now_time_buf, sizeof(now_time_buf)));
     // 2. upload part
     part_result_node *part_result_arr = NULL;
     int part_result_num = 0;
@@ -482,6 +483,7 @@ void TEST_LIST_PARTS_03(void) {
     if (!buf) {
         printf("[ERROR] alloc memory failed! please review code.");
         CU_ASSERT(0);
+        RemoveFile(filename);
         return;
     }
     int dat_len = 0;
@@ -550,15 +552,12 @@ void TEST_LIST_PARTS_03(void) {
     CU_ASSERT(200 == resp->status_code);
     buffer_free(resp);
    
-    printf("%s:%d %s complete_mulitpart_upload ok!\n", __FUNCTION__, __LINE__, now_str());
+    printf("%s:%d %s complete_mulitpart_upload ok!\n", __FUNCTION__, __LINE__, now_str(now_time_buf, sizeof(now_time_buf)));
 
-    const char* tmp = strrchr(filename, '/');
-    tmp += 1;
-    snprintf(down_filename, 1024, "%s.download", tmp);
     resp = download_file_object(host, bucket, object_key, down_filename, ak, sk, NULL, NULL, &error);
     if (resp->status_code != 200) {
         printf("test %s:%d\n", __FUNCTION__, __LINE__);
-        printf("%s:%d %s download_file_object failed!\n", __FUNCTION__, __LINE__, now_str());
+        printf("%s:%d %s download_file_object failed!\n", __FUNCTION__, __LINE__, now_str(now_time_buf, sizeof(now_time_buf)));
         printf("status code = %ld\n", resp->status_code);
         printf("status msg = %s\n", resp->status_msg);
     }
@@ -566,7 +565,7 @@ void TEST_LIST_PARTS_03(void) {
     CU_ASSERT(200 == resp->status_code);
     buffer_free(resp);
 
-    printf("%s:%d %s download_file_object ok!\n", __FUNCTION__, __LINE__, now_str());
+    printf("%s:%d %s download_file_object ok!\n", __FUNCTION__, __LINE__, now_str(now_time_buf, sizeof(now_time_buf)));
 
     char b64_up[64] = {0};
     char b64_down[64] = {0};
@@ -591,13 +590,14 @@ void TEST_LIST_PARTS_03(void) {
     buffer_free(resp);
 
     free(buf);
+    RemoveFile(filename);
+    RemoveFile(down_filename);
     return;
 }
 
 void TEST_MULTIPARTS_UPLOAD_DOWNLOAD_04(void) {
     int error;
     const char* filename = "./lib/libcunit.a"; 
-    //const char* filename = "/data/ssd4/liangjianqun/migrate/ks3/all/round1-1.tar.gz";
     char down_filename[1024];
 
     buffer *resp = NULL;

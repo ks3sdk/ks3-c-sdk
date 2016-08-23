@@ -79,13 +79,11 @@ static struct tm* cp_localtime(time_t local_sec, struct tm* local_tm, int time_z
     return local_tm;
 }
 
-static const char* now_str() {
+static const char* now_str(char *buf, int buf_size) {
     struct tm tm_buf;
     cp_localtime(time(NULL), &tm_buf, 8);
-    char buf[1024];
 
-
-    snprintf(buf, sizeof(buf), "%d-%d-%d %d:%d:%d",
+    snprintf(buf, buf_size, "%d-%d-%d %d:%d:%d",
             tm_buf.tm_year + 1900, tm_buf.tm_mon + 1, tm_buf.tm_mday, tm_buf.tm_hour, tm_buf.tm_min, tm_buf.tm_sec);
 
     return buf;
@@ -215,7 +213,7 @@ static int compute_buf_md5b64 (char* buf, int buf_len, char* base64_buf) {
     return 0;
 }
 
-static long get_file_size(const char* filename) {
+static int64_t get_file_size(const char* filename) {
     FILE * fp = NULL;
     fp = fopen(filename, "r");
     if (fp == NULL) {
@@ -223,19 +221,19 @@ static long get_file_size(const char* filename) {
         return -1;
     }
     fseek(fp, 0, SEEK_END);
-    long len = ftell(fp);
+    int64_t len = ftell(fp);
     fclose(fp);
     return len;
 }
 
-static long read_file(const char* filename, char* buf, long offset, long len) {
+static int64_t read_file(const char* filename, char* buf, int64_t offset, int64_t len) {
     FILE* fp = fopen(filename, "r");
     if (fp == NULL) {
         printf("[ERROR] open file=%s failed\n", filename);
         return -1;
     }
     fseek(fp, offset, SEEK_SET);
-    long rlen = fread(buf, 1, len, fp);
+    int64_t rlen = fread(buf, 1, len, fp);
     if (rlen != len) {
         printf("[ERROR] read file=%s failed: offset=%ld, len=%ld, but read len is : %ld\n", filename, offset, len, rlen);
         fclose(fp);
@@ -250,8 +248,8 @@ static int multiparts_upload(const char* host, const char* bucket, const char* o
     const char* access_key, const char* secret_key, const char* filename, const char *uploadid,
     part_result_node** result_arr, int *result_num, int *err, int retry_num) {
 
-    const long FIRST_MIN_PART_SIZE = (5 * 1024 * 1024); // 5MB
-    const long SECOND_MIN_PART_SIZE = (100 * 1024);     // 100KB
+    const int64_t FIRST_MIN_PART_SIZE = (5 * 1024 * 1024); // 5MB
+    const int64_t SECOND_MIN_PART_SIZE = (100 * 1024);     // 100KB
 
     int error = 0;
     int ret = 0;
@@ -259,9 +257,9 @@ static int multiparts_upload(const char* host, const char* bucket, const char* o
     char header_str[1024];
     buffer *resp = NULL;
 
-    long file_len = 0; 
-    long part_size = 0;
-    long part_num = 0;
+    int64_t file_len = 0; 
+    int64_t part_size = 0;
+    int64_t part_num = 0;
 
     file_len = get_file_size(filename);
     if (file_len > FIRST_MIN_PART_SIZE * 10000) 
@@ -273,7 +271,7 @@ static int multiparts_upload(const char* host, const char* bucket, const char* o
     else 
         part_size = file_len;
 
-    long buf_size = part_size;
+    int64_t buf_size = part_size;
     char* buf = (char *)malloc(part_size);
     if (!buf) {
         printf("[ERROR] %s:%d alloc memory failed! please review code.", __FUNCTION__, __LINE__);
@@ -294,8 +292,8 @@ static int multiparts_upload(const char* host, const char* bucket, const char* o
     char  base64_buf[32];
     int count = 0;
     int retry_cnt = 0;
-    long read_length = 0;
-    long remain_len = file_len;
+    int64_t read_length = 0;
+    int64_t remain_len = file_len;
 
     while (remain_len > 0) {
         retry_cnt = 0;
