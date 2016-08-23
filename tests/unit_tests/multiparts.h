@@ -274,16 +274,18 @@ static int multiparts_upload(const char* host, const char* bucket, const char* o
     int64_t buf_size = part_size;
     char* buf = (char *)malloc(part_size);
     if (!buf) {
-        printf("[ERROR] %s:%d alloc memory failed! please review code.", __FUNCTION__, __LINE__);
+        printf("[ERROR] %s:%d alloc memory size:%ld failed! please review code.", __FUNCTION__, __LINE__, part_size);
+
         CU_ASSERT(0);
         return -1;
     }
 
     part_num = file_len / part_size + (file_len % part_size ? 1 : 0);
-    part_result_node *part_result_arr = (part_result_node *)malloc(sizeof(part_result_node) * part_num);
+    int64_t alloc_size = sizeof(part_result_node) * part_num;
+    part_result_node *part_result_arr = (part_result_node *)malloc(alloc_size);
     if (!part_result_arr) {
         free(buf);
-        printf("[ERROR] %s:%d alloc memory failed! please review code.", __FUNCTION__, __LINE__);
+        printf("[ERROR] %s:%d alloc memory size:%ld failed! please review code.", __FUNCTION__, __LINE__, alloc_size);
         CU_ASSERT(0);
         return -2;
     }

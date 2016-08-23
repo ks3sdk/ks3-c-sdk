@@ -152,7 +152,7 @@ void TEST_MULTIPARTS_COMPLETE_00(void) {
     int buf_size = 5 * 1024 * 1024;
     char* buf = (char *)malloc(buf_size);
     if (!buf) {
-        printf("[ERROR] alloc memory failed! please review code.");
+        printf("[ERROR] %s:%d alloc memory size:%d failed! please review code.", __FUNCTION__, __LINE__, buf_size);
         CU_ASSERT(0);
         return;
     }
@@ -261,7 +261,7 @@ void TEST_MULTIPARTS_COMPLETE_01(void) {
     int64_t buf_size = 5 * 1024 * 1024;
     char* buf = (char *)malloc(buf_size);
     if (!buf) {
-        printf("[ERROR] alloc memory failed! please review code.");
+        printf("[ERROR] %s:%d alloc memory size:%d failed! please review code.", __FUNCTION__, __LINE__, buf_size);
         return;
     }
     int dat_len = 0;
@@ -481,7 +481,7 @@ void TEST_LIST_PARTS_03(void) {
     int buf_size = 5 * 1024 * 1024;
     char* buf = (char *)malloc(buf_size);
     if (!buf) {
-        printf("[ERROR] alloc memory failed! please review code.");
+        printf("[ERROR] %s:%d alloc memory size:%d failed! please review code.", __FUNCTION__, __LINE__, buf_size);
         CU_ASSERT(0);
         RemoveFile(filename);
         return;
@@ -647,7 +647,7 @@ void TEST_MULTIPARTS_UPLOAD_DOWNLOAD_04(void) {
     int buf_size = 5 * 1024 * 1024;
     char* buf = (char *)malloc(buf_size);
     if (!buf) {
-        printf("[ERROR] alloc memory failed! please review code.");
+        printf("[ERROR] %s:%d alloc memory size:%d failed! please review code.", __FUNCTION__, __LINE__, buf_size);
         CU_ASSERT(0);
         return;
     }
