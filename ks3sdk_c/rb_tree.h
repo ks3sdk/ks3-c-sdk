@@ -31,13 +31,14 @@ typedef struct rb_node_t {
     struct rb_node_t* parent;    
 } rb_node_t;
 
-rb_node_t* rb_insert_compare(key_value* kv, rb_node_t* root,
-	int (*compare_func)(key_value*, key_value*));
-rb_node_t* rb_search_compare(key_value* kv, rb_node_t* root,
-	int (*compare_func)(key_value*, key_value*));
-rb_node_t* rb_erase_compare(key_value* kv, rb_node_t* root,
-	int (*compare_func)(key_value*, key_value*));
+int rb_insert_compare(key_value* kv, rb_node_t* root,
+	int (*compare_func)(key_value*, key_value*), rb_node_t** ret);
+int rb_search_compare(key_value* kv, rb_node_t* root,
+	int (*compare_func)(key_value*, key_value*), rb_node_t** ret);
+int rb_erase_compare(key_value* kv, rb_node_t* root,
+	int (*compare_func)(key_value*, key_value*), rb_node_t** ret);
 void rb_erase_all(rb_node_t* root);
+void free_kv(key_value* kv);
 
 #ifdef __cplusplus
 }

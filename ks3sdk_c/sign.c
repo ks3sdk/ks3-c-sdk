@@ -124,6 +124,7 @@ static void build_query_kv_map(const char* query_args, rb_node_t** root) {
 	char* out_ptr = NULL;
 	key_value* kv_pair = NULL;
 	char src_cpy[1024] = { '\0' };
+    int ret;
     strncpy(src_cpy, query_args, strlen(query_args));
 
 	// 1. split by '&'
@@ -142,7 +143,11 @@ static void build_query_kv_map(const char* query_args, rb_node_t** root) {
         // value : need to trim, no need tolower
         split_kv(token, "=", kv_pair);
         // 3. insert key_value into rb tree
-        *root = rb_insert_compare(kv_pair, *root, &key_value_compare);
+        ret = rb_insert_compare(kv_pair, *root, &key_value_compare, root);
+        if (ret != 0) {
+            free_kv(kv_pair);
+            kv_pair = NULL;
+        }
 #ifdef _WIN32
         token = strtok_s(NULL, "&", &out_ptr);
 #endif
@@ -279,6 +284,7 @@ static void build_header_kv_map(const char* headers,
 	char* out_ptr = NULL;
 	key_value* kv_pair = NULL;
 	char src_cpy[1024] = { '\0' };
+    int ret;
     strncpy(src_cpy, headers, strlen(headers));
 
 	// 1. split by '\n'
@@ -298,7 +304,11 @@ static void build_header_kv_map(const char* headers,
         split_kv(token, ":", kv_pair);
 		strlwr(kv_pair->key);
         // 3. insert key_value into rb tree
-        *root = rb_insert_compare(kv_pair, *root, &key_compare);
+        ret = rb_insert_compare(kv_pair, *root, &key_compare, root);
+        if (ret != 0) {
+            free_kv(kv_pair);
+            kv_pair = NULL;
+        }
 #ifdef _WIN32
         token = strtok_s(NULL, "\n", &out_ptr);
 #endif
@@ -342,6 +352,7 @@ extern char* make_origin_sign(int method_type,
 	key_value kv;
 	rb_node_t* md5_node = NULL;
 	rb_node_t* type_node = NULL;
+    int ret;
 	char canned_headers[1024] = { '\0' };
     
 	// 1. append: ${method}\n
@@ -353,16 +364,16 @@ extern char* make_origin_sign(int method_type,
 	}
     // 3. get and append: ${content-md5}\n
 	kv.key = "content-md5";
-    md5_node = rb_search_compare(&kv, root, &key_compare);
-	if (md5_node != NULL
+    ret = rb_search_compare(&kv, root, &key_compare, &md5_node);
+	if (ret == 0 && md5_node != NULL
 		&& md5_node->kv != NULL && md5_node->kv->value != NULL) {
         strcat(origin_sign, md5_node->kv->value);
     }
     strcat(origin_sign, "\n");
     // 4. get and append: ${content-type}\n
 	kv.key = "content-type";
-    type_node = rb_search_compare(&kv, root, &key_compare);
-    if (type_node != NULL
+    ret = rb_search_compare(&kv, root, &key_compare, &type_node);
+    if (ret == 0 && type_node != NULL
 		&& type_node->kv != NULL && type_node->kv->value != NULL) {
         strcat(origin_sign, type_node->kv->value);
     }

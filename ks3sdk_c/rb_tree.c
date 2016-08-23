@@ -17,15 +17,7 @@ static void free_rb_node(rb_node_t* node) {
     if (node == NULL) {
         return;
     }
-    if (node->kv) {
-		if (node->kv->key) {
-			free(node->kv->key);
-		}
-		if (node->kv->value) {
-			free(node->kv->value);
-		}
-		free(node->kv);
-    }
+    free_kv(node->kv);
     free(node);
     node = NULL;
 }
@@ -72,9 +64,11 @@ static rb_node_t* rb_rotate_right(rb_node_t* node, rb_node_t* root) {
     return root;
 }
 
-static rb_node_t* rb_search_auxiliary_compare(
+// exists: return 0 and node address
+// not exist: return -1 and NULL
+static int rb_search_auxiliary_compare(
 	key_value* kv, rb_node_t* root, rb_node_t** save,
-	int (*compare_func)(key_value*, key_value*)) {
+	int (*compare_func)(key_value*, key_value*), rb_node_t** ret_node) {
     int ret;
     rb_node_t* node = root;
     rb_node_t* parent = NULL;
@@ -87,7 +81,8 @@ static rb_node_t* rb_search_auxiliary_compare(
         } else if (ret < 0) {
             node = node->right;
         } else {
-			return node;
+            *ret_node = node;
+			return 0;
         }
     }
 
@@ -95,12 +90,13 @@ static rb_node_t* rb_search_auxiliary_compare(
         *save= parent;
     }
 
-    return NULL;
+    *ret_node = NULL;
+    return -1;
 }
 
-rb_node_t* rb_search_compare(key_value* kv, rb_node_t* root,
-	int (*compare_func)(key_value*, key_value*)) {
-		return rb_search_auxiliary_compare(kv, root, NULL, compare_func);
+int rb_search_compare(key_value* kv, rb_node_t* root,
+	int (*compare_func)(key_value*, key_value*), rb_node_t** ret) {
+    return rb_search_auxiliary_compare(kv, root, NULL, compare_func, ret);
 }
 
 static rb_node_t *rb_insert_rebalance(rb_node_t* node, rb_node_t* root) {
@@ -155,15 +151,21 @@ static rb_node_t *rb_insert_rebalance(rb_node_t* node, rb_node_t* root) {
     return root;
 }
 
-rb_node_t* rb_insert_compare(key_value* kv,
-	rb_node_t* root, int (*compare_func)(key_value*, key_value*)) {
+// success : return zero
+// failed : return non-zero
+int rb_insert_compare(key_value* kv,
+	rb_node_t* root, int (*compare_func)(key_value*, key_value*),
+    rb_node_t** ret) {
     rb_node_t* parent = NULL;
     rb_node_t* node;
     int cmp_ret;
+    int exist;
 
     parent = NULL;
-	if ((node = rb_search_auxiliary_compare(kv, root, &parent, compare_func))) {
-        return root;
+    exist = rb_search_auxiliary_compare(kv, root, &parent, compare_func, &node);
+	if (exist == 0) {
+        // node already exist
+        return -1;
     }
     node = rb_new_node(kv);
     node->parent = parent;
@@ -181,7 +183,8 @@ rb_node_t* rb_insert_compare(key_value* kv,
         root = node;
     }
 
-    return rb_insert_rebalance(node, root);
+    *ret = rb_insert_rebalance(node, root);
+    return 0;
 } 
 
 static rb_node_t* rb_erase_rebalance(rb_node_t* node,
@@ -270,18 +273,21 @@ static rb_node_t* rb_erase_rebalance(rb_node_t* node,
     return root;
 } 
 
-rb_node_t* rb_erase_compare(key_value* kv, rb_node_t* root,
-	int (*compare_func)(key_value*, key_value*)) {
-		rb_node_t *child, *parent, *old, *left, *node; 
+int rb_erase_compare(key_value* kv, rb_node_t* root,
+	int (*compare_func)(key_value*, key_value*), rb_node_t** ret) {
+    rb_node_t *child, *parent, *old, *left, *node; 
     color_t color; 
+    int exist;
 
-    if (!(node = rb_search_auxiliary_compare(kv, root,
-		NULL, compare_func))) {
-        //printf("key %d is not exist!\n");
-        printf("key is not exist!\n");
-        return root; 
+    exist = rb_search_auxiliary_compare(kv, root, NULL, compare_func, &node);
+    if (exist != 0) {
+        // node not exists
+        printf("key does not exist!\n");
+        *ret = root;
+        return exist; 
     }
 
+    // node exists
     old = node;
     if (node->left && node->right) {
         node = node->right;
@@ -357,7 +363,8 @@ rb_node_t* rb_erase_compare(key_value* kv, rb_node_t* root,
     if (color == BLACK) {
         root= rb_erase_rebalance(child, parent, root);
     }
-    return root;
+    *ret = root;
+    return 0;
 }
 
 void rb_erase_all(rb_node_t* root) {
@@ -371,4 +378,16 @@ void rb_erase_all(rb_node_t* root) {
 		rb_erase_all(root->right);
 	}
 	free_rb_node(root);
+}
+
+void free_kv(key_value* kv) {
+    if (kv != NULL) {
+        if (kv->key != NULL) {
+            free(kv->key);
+        }
+        if (kv->value != NULL) {
+            free(kv->value);
+        }
+        free(kv);
+    }
 }
