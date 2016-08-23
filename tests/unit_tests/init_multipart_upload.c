@@ -68,11 +68,11 @@ void TEST_INIT_MULTIPART_UPLOAD_HOST(void) {
     buffer_free(resp);
 
     resp = init_multipart_upload(NULL, NULL, object_key, ak, sk, NULL, NULL, &error);
-    CU_ASSERT(3 == error);
+    CU_ASSERT(3 == error || 6 == error);
     buffer_free(resp);
     
     resp = init_multipart_upload(NULL, NULL, NULL, ak, sk, NULL, NULL, &error);
-    CU_ASSERT(3 == error);
+    CU_ASSERT(3 == error || 6 == error);
     buffer_free(resp);
 
     resp = init_multipart_upload(NULL, NULL, NULL, NULL, NULL, NULL, NULL, &error); 
