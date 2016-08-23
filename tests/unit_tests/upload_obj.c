@@ -95,6 +95,50 @@ void TEST_UPLOAD_OBJECT(void) {
     buffer_free(resp);
 }
 
+void TEST_UPLOAD_OBJECT_BUFLEN_OUT_OF_RANGE(void) {
+    int error;
+    buffer* resp = NULL;
+
+    const char* obj_key = "unit_test_dir/upload_obj_with_buflen_outofrange";
+    const char* filename = "./lib/libcunit.a";
+
+    resp = delete_object(host, bucket, obj_key, ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(204 == resp->status_code || 404 == resp->status_code);
+    buffer_free(resp);
+
+    int filelen = file_len(filename);
+    char* buf = (char *) malloc (filelen);
+    memset(buf, '\0', filelen);
+    int rlen = read_file(filename, buf);
+    CU_ASSERT(rlen == filelen);
+    rlen += 10;
+    resp = upload_object(host, bucket, obj_key, buf, rlen,
+            ak, sk, NULL, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(200 == resp->status_code);
+    if (resp->status_code != 200) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    free(buf);
+    buffer_free(resp);
+
+    /*
+    resp = delete_object(host, bucket, obj_key,
+            ak, sk, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(204 == resp->status_code);
+    if (resp->status_code != 204) {
+        printf("status code = %ld\n", resp->status_code);
+        printf("status msg = %s\n", resp->status_msg);
+        printf("error msg = %s\n", resp->body);
+    }
+    buffer_free(resp);
+    */
+}
+
 void TEST_UPLOAD_OBJECT_EXIST(void) {
     int error;
     buffer* resp = NULL;
@@ -382,6 +426,8 @@ int main() {
     /* add the tests to the suite */
     if (CU_add_test(pSuite, "test upload object\n",
                 TEST_UPLOAD_OBJECT) == NULL ||
+            CU_add_test(pSuite, "test upload object with buflen out of range",
+                TEST_UPLOAD_OBJECT_BUFLEN_OUT_OF_RANGE) == NULL ||
             CU_add_test(pSuite, "test upload object exist\n",
                 TEST_UPLOAD_OBJECT_EXIST) == NULL ||
             CU_add_test(pSuite, "test upload object with callback\n",
