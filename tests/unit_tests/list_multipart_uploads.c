@@ -24,6 +24,27 @@ int clean_suite1(void) {
     return 0;
 }
 
+void check_resp(const char* body, int expect) {
+    char* is_truncated_start = "<IsTruncated>";
+    char* is_truncated_end = "</IsTruncated>";
+    int len = strlen(is_truncated_start);
+    char truncated[5] = { '\0' };
+
+    char* begin = strstr(body, is_truncated_start);
+    if (begin != NULL) {
+        char* end = strstr(begin + len, is_truncated_end);
+        strncpy(truncated, begin + len, end - begin - len);
+        if (expect == 0) {
+            CU_ASSERT(strncmp(truncated, "false", strlen(truncated)) == 0);
+        } else {
+            CU_ASSERT(strncmp(truncated, "true", strlen(truncated)) == 0);
+        }
+        printf("%s\n", truncated);
+    } else {
+        CU_ASSERT(0 == 1);
+    }
+}
+
 
 int error;
 buffer *resp = NULL;
@@ -569,7 +590,8 @@ void TEST_LIST_MULTIPART_UPLOADS_MULTI_TIMES(void) {
         buffer_free(resp);
     }
     // list
-    buffer* resp = list_multipart_uploads(host, bucket, ak, sk, NULL, NULL, &error); CU_ASSERT(0 == error);
+    buffer* resp = list_multipart_uploads(host, bucket,
+            ak, sk, NULL, NULL, &error); CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {                        
         printf("test %s:%d:\n", __FUNCTION__, __LINE__);          
@@ -577,6 +599,37 @@ void TEST_LIST_MULTIPART_UPLOADS_MULTI_TIMES(void) {
         printf("status msg = %s\n", resp->status_msg);     
         printf("error msg = %s\n", resp->body);            
     }
+    buffer_free(resp);
+    // list with max-uploads
+    char query_args[100] = { '\0' };
+    snprintf(query_args, 100, "uploads&max-uploads=3");
+    resp = list_multipart_uploads(host, bucket,
+            ak, sk, query_args, NULL, &error); CU_ASSERT(0 == error);
+    CU_ASSERT(200 == resp->status_code);
+    if (resp->status_code != 200) {                        
+        printf("test %s:%d:\n", __FUNCTION__, __LINE__);          
+        printf("status code = %ld\n", resp->status_code);  
+        printf("status msg = %s\n", resp->status_msg);     
+        printf("error msg = %s\n", resp->body);            
+    }
+    // check 3 results, IsTruncated = true
+    check_resp(resp->body, 1);
+    buffer_free(resp);
+    // list with key-marker and upload-id-marker
+    snprintf(query_args, 100, "uploads&max-uploads=3"
+            "&key-marker=TEST_LIST_MULTIPART_UPLOADS_MULTI_TIMES_2"
+            "&upload-id-marker=8b06bacfa6904683bfd30d854ff9b6ce");
+    resp = list_multipart_uploads(host, bucket,
+            ak, sk, query_args, NULL, &error); CU_ASSERT(0 == error);
+    CU_ASSERT(200 == resp->status_code);
+    if (resp->status_code != 200) {                        
+        printf("test %s:%d:\n", __FUNCTION__, __LINE__);          
+        printf("status code = %ld\n", resp->status_code);  
+        printf("status msg = %s\n", resp->status_msg);     
+        printf("error msg = %s\n", resp->body);            
+    }
+    // check 2 results
+    check_resp(resp->body, 0);
     buffer_free(resp);
 
     // abort uploadId finally
@@ -595,6 +648,7 @@ void TEST_LIST_MULTIPART_UPLOADS_MULTI_TIMES(void) {
             printf("error msg = %s\n", resp->body);
         }
         buffer_free(resp);
+        free(argv[i]);
     }
 }
 
@@ -646,7 +700,7 @@ int main() {
             TEST_LIST_MULTIPART_UPLOADS_QUERYPARA)
         || NULL == CU_add_test(pSuite, "test list multipart uploads params header\n",
             TEST_LIST_MULTIPART_UPLOADS_HEADERPARA)
-        || NULL == CU_add_test(pSuite, "test list multipart uplaod multi times",
+        || NULL == CU_add_test(pSuite, "test list multipart uplaod multi times\n",
             TEST_LIST_MULTIPART_UPLOADS_MULTI_TIMES)
         || NULL == CU_add_test(pSuite, "test clean list multipart uploads\n",
             clean_bucket)) {
