@@ -38,15 +38,15 @@ int main()
 	api_test_copy_object();
 	api_test_download_object_to_buffer();
 	*/
-    ret = CreateBucket(host, bucket, ak, sk); 
-    
+    ret = CreateBucket(host, bucket, ak, sk);
+
     api_test_init_upload_complete();
     api_test_init_upload_listparts_complete();
     api_test_init_listmultiparts_abort();
-   
+
     ret = DeleteBucket(host, bucket, ak, sk);
     ks3_global_destroy();
-	
+
 	//system("pause");
 	return 0;
 }
@@ -63,23 +63,23 @@ int load_key() {
     int len = strlen(ak);
     ak[len - 1] = '\0';
     printf("ak=%s\n", ak);
-    
+
     fgets(sk, 100, fp);
     len = strlen(sk);
     sk[len - 1] = '\0';
     printf("sk=%s\n", sk);
-    
+
     fgets(host, 512, fp);
     len = strlen(host);
     host[len - 1] = '\0';
     printf("host=%s\n", host );
-    
+
     fclose(fp);
     return 0;
 }
 
 void api_test_bucket_relative() {
-	char* bucket = "win-c-bucket1";	
+	char* bucket = "win-c-bucket1";
 
 	buffer* resp;
 	// curl错误码
@@ -157,7 +157,7 @@ void api_test_bucket_relative() {
 	}
 	buffer_free(resp);
 	printf("after delete_bucket\n");
-	
+
 }
 
 void api_test_object_relative() {
@@ -168,8 +168,8 @@ void api_test_object_relative() {
 	//"location=adsf&lifecycle=qwe&acl=123&website=123&website=435";
 	char* query_args = "";
 	char* headers = "x-kss-callbackurl:http://10.4.2.38:19090/\ncontent-type:text";
-	
-	// 以下示例是各个接口调用	
+
+	// 以下示例是各个接口调用
 	// 服务端响应内容保存在动态buffer
 	// buffer使用完，需要调用buffer_free函数释放内存
 	buffer* resp;
@@ -189,10 +189,10 @@ void api_test_object_relative() {
 			printf("error msg=%s\n", resp->body);
 		}
 	}
-	
+
 	buffer_free(resp);
 	printf("after upload file object\n");
-	
+
 	printf("before upload file object\n");
 	resp = upload_file_object(host, bucket,
 		"win32/xxx2.log", filename, ak, sk, query_args, NULL, &error);
@@ -205,9 +205,9 @@ void api_test_object_relative() {
 			printf("error msg=%s\n", resp->body);
 		}
 	}
-	buffer_free(resp);	
+	buffer_free(resp);
 	printf("after upload file object\n");
-	
+
 	printf("before upload file object with query_args and headers\n");
 	resp = upload_file_object(host, bucket,
 		"win32/xxx3.log", filename, ak, sk, query_args, headers, &error);
@@ -220,7 +220,7 @@ void api_test_object_relative() {
 			printf("error msg=%s\n", resp->body);
 		}
 	}
-	buffer_free(resp);	
+	buffer_free(resp);
 	printf("after upload file object with query_args and headers\n");
 
 	//从bucket下载一个object保存在本地文件
@@ -285,7 +285,7 @@ void api_test_object_relative() {
 	}
 	buffer_free(resp);
 	printf("after list object\n");
-	
+
 }
 
 void api_test_buf_relative() {
@@ -448,22 +448,24 @@ void api_test_init_upload_complete() {
         print_len = snprintf(dat + dat_len, dat_size - dat_len, "<Part><PartNumber>%d</PartNumber><ETag>\"%.*s\"</ETag></Part>",
             part_result_arr[i - 1].id, ETAG_LEN, part_result_arr[i - 1].etag);
         dat_len += print_len;
-    }   
+    }
     print_len = snprintf(dat + dat_len, dat_size - dat_len, "</CompleteMultipartUpload>\n");
     dat_len += print_len;
 
-    snprintf(query_str, 1024, "uploadId=%s", uploadid_str);
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, dat, dat_len, query_str, NULL, &error);
+    //snprintf(query_str, 1024, "uploadId=%s", uploadid_str);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, dat, dat_len, NULL, NULL, &error);
 
     if (resp->status_code != 200) {
-        printf("test complete_multipart_upload:\n");
+        printf("test %s:%d  complete_multipart_upload:\n", __FUNCTION__, __LINE__);
         printf("status code = %ld\n", resp->status_code);
         printf("status msg = %s\n", resp->status_msg);
-        printf("error msg = %s\n", resp->body);        
+        printf("error msg = %s\n", resp->body);
         buffer_free(resp);
-        
-        snprintf(query_str, 1024, "uploadId=%s", uploadid_str);
-        resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
+
+        //snprintf(query_str, 1024, "uploadId=%s", uploadid_str);
+        resp = abort_multipart_upload(host, bucket, object_key, ak, sk,
+            uploadid_str, NULL, NULL, &error);
         if (resp->status_code != 204) {
             printf("test abort_multipart_upload:\n");
             printf("status code = %ld\n", resp->status_code);
@@ -540,7 +542,7 @@ void api_test_init_upload_listparts_complete(){
     if (part_result_arr)
         free(part_result_arr);
     part_result_arr = NULL;
-    
+
     // 3. list_multipart_uploads
     snprintf(query_str, 1024, "uploads");
     resp = list_multipart_uploads(host, bucket, ak, sk, NULL, NULL, &error);
@@ -555,9 +557,9 @@ void api_test_init_upload_listparts_complete(){
     buffer_free(resp);
 
     // 4. list_parts
-    snprintf(query_str, 1024, "uploadId=%s", objectid_str);
-    resp = list_parts(host, bucket, object_key, ak, sk, query_str, NULL, &error);
-
+    //snprintf(query_str, 1024, "uploadId=%s", objectid_str);
+    resp = list_parts(host, bucket, object_key, ak, sk,
+        objectid_str, NULL, NULL, &error);
     if (resp->status_code != 200) {
         printf("test list_parts:\n");
         printf("status code = %ld\n", resp->status_code);
@@ -598,11 +600,11 @@ void api_test_init_upload_listparts_complete(){
     dat_len += print_len;
     buffer_free(resp);
 
-    snprintf(query_str, 1024, "uploadId=%s", objectid_str);
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, dat, dat_len, query_str, NULL, &error);
-
+    //snprintf(query_str, 1024, "uploadId=%s", objectid_str);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        objectid_str, dat, dat_len, NULL, NULL, &error);
     if (resp->status_code != 200) {
-        printf("test complete_multipart_upload:\n");
+        printf("test %s:%d complete_multipart_upload:\n", __FUNCTION__, __LINE__);
         printf("status code = %ld\n", resp->status_code);
         printf("status msg = %s\n", resp->status_msg);
         printf("error msg = %s\n", resp->body);
@@ -630,9 +632,9 @@ void api_test_init_listmultiparts_abort(){
     char upload_id[128] = { 0 };
     int obj_num = 1000;
 
-    
+
     int i = 0;
-    for (i = 0; i < obj_num; ++i ) { 
+    for (i = 0; i < obj_num; ++i ) {
         snprintf(object_key, 1024, "test_multiparts_object_%04d", i);
         snprintf(query_str, 1024, "uploads");
         snprintf(header_str, 1024, "Content-Type: text/plain;charset=UTF-8");
@@ -647,7 +649,7 @@ void api_test_init_listmultiparts_abort(){
 
         buffer_free(resp);
     }
-        
+
     obj_num = obj_num << 10;
 
     int key_num = 0;
@@ -664,7 +666,8 @@ void api_test_init_listmultiparts_abort(){
     char *key_ptr = NULL;
     char *key_end = NULL;
     int key_len = 0;
-    
+    char sub_uploadid[128] = {0};
+
     snprintf(query_str, 1024, "uploads&max-uploads=%d", max_uploads);
     do {
         has_next = 0;
@@ -679,15 +682,15 @@ void api_test_init_listmultiparts_abort(){
             printf("error msg = %s\n", resp->body);
 
         }
-        
+
         char *content = resp->body;
         char *next_key = strstr(content, "<NextKeyMarker>");
         if (next_key) {
             next_key += strlen("<NextKeyMarker>");
             char * end = strstr(next_key, "</NextKeyMarker>");
-            if (end) 
+            if (end)
                 snprintf(key_marker, 1024, "%.*s", end - next_key, next_key);
-            
+
             char * next_upload_id = strstr(content, "<NextUploadIdMarker>");
             if (next_upload_id) {
                 next_upload_id += strlen("<NextUploadIdMarker>");
@@ -712,33 +715,35 @@ void api_test_init_listmultiparts_abort(){
             cur += key_len;
             *(short *)cur = 0;
             cur += 2;
-            
+
             key_ptr = strstr(key_end, "<UploadId>");
             key_ptr += strlen("<UploadId>");
             key_end = strstr(key_ptr, "</UploadId>");
             key_len = key_end - key_ptr;
-                
+
             off_arr[key_num++] = cur - buf;
             strncpy(cur, key_ptr, key_len);
             cur += key_len;
             *(short *)cur = 0;
-            cur += 2; 
-            
+            cur += 2;
+
             key_ptr = strstr(key_end, "<Key>");
         }
-        
+
         buffer_free(resp);
     } while (has_next);
 
     printf("key_num is %d\n", key_num);
 
-    i = 0; 
+    i = 0;
     while ( i < key_num ) {
         // 5. abort_multipart_upload
         snprintf(object_key, 1024, "%s", buf + off_arr[i++]);
-        snprintf(query_str, 1024, "uploadId=%s", buf + off_arr[i++]);
+        //snprintf(query_str, 1024, "uploadId=%s", buf + off_arr[i++]);
+        snprintf(sub_uploadid, sizeof(sub_uploadid), "%s", buf + off_arr[i++]);
 
-        resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
+        resp = abort_multipart_upload(host, bucket, object_key, ak, sk,
+            sub_uploadid, NULL, NULL, &error);
         if (resp->status_code != 204) {
             printf("test abort_multipart_upload: i = %d\n", i - 2);
             printf("status code = %ld\n", resp->status_code);

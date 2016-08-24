@@ -38,17 +38,12 @@ char com_xml[4096];
 
 const char *bucket = "bucket-test-for-complete-multipart-upload";
 
-static int init_complete(const char *ht, const char *bt, const char *ot, char *up_id, char* out_xml, int out_size) {
+static int init_complete() {
     int result = 0;
     buffer* sub_resp = NULL;
 
-    if (!up_id || !out_xml) return -1;
-    
-    up_id[0] = 0;
-    out_xml[0] = 0;
-
-
-    sub_resp = init_multipart_upload(ht, bt, ot, ak, sk, NULL, NULL, &result);
+    sub_resp = init_multipart_upload(host, bucket, object_key, ak, sk,
+        NULL, NULL, &result);
     CU_ASSERT(0 == result);
     CU_ASSERT(200 == sub_resp->status_code);
     if (200 != sub_resp->status_code) {
@@ -64,15 +59,15 @@ static int init_complete(const char *ht, const char *bt, const char *ot, char *u
             oid_beg_ptr += strlen("<UploadId>");
             char *oid_end_ptr = strstr(oid_beg_ptr, "</UploadId>");
             if (oid_end_ptr) {
-                strncpy(up_id, oid_beg_ptr, oid_end_ptr - oid_beg_ptr);
-                up_id[oid_end_ptr - oid_beg_ptr] = 0;
+                strncpy(uploadid_str, oid_beg_ptr, oid_end_ptr - oid_beg_ptr);
+                uploadid_str[oid_end_ptr - oid_beg_ptr] = 0;
             }
         }
     }
     buffer_free(sub_resp);
 
-    snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", 1, up_id);
-    sub_resp = upload_part(ht, bt, ot, ak, sk, "abcdefghijklmn", 14, query_str, NULL, &result);
+    sub_resp = upload_part(host, bucket, object_key, ak, sk,
+        uploadid_str, 1, "abcdefghijklmn", 14, NULL, NULL, &result);
     CU_ASSERT(0 == result);
     CU_ASSERT(200 == sub_resp->status_code);
     if (sub_resp->status_code != 200) {
@@ -93,7 +88,7 @@ static int init_complete(const char *ht, const char *bt, const char *ot, char *u
     }
 
     
-    snprintf(out_xml, out_size, "<CompleteMultipartUpload>\n"
+    snprintf(com_xml, sizeof(com_xml), "<CompleteMultipartUpload>\n"
                                 "<Part>\n"
                                 "<PartNumber>%d</PartNumber>\n"
                                 "<ETag>\"%.*s\"</ETag>"
@@ -106,7 +101,8 @@ static int init_complete(const char *ht, const char *bt, const char *ot, char *u
 }
 
 void TEST_COMPLETE_MULTIPART_UPLOAD_ALL_NULL(void) {
-    resp = complete_multipart_upload(NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL);
+    resp = complete_multipart_upload(NULL, NULL, NULL, NULL, NULL, 
+        NULL, NULL, 0, NULL, NULL, NULL);
     CU_ASSERT(NULL == resp);
     
     return;
@@ -115,19 +111,24 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_ALL_NULL(void) {
 void TEST_COMPLETE_MULTIPART_UPLOAD_RETURNCODE_NULL(void) {
     
     snprintf(object_key, 1024, "%s", __FUNCTION__);
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, NULL, 0, NULL, NULL, NULL);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        NULL, NULL, 0, NULL, NULL, NULL);
     CU_ASSERT(NULL == resp);
 
-    resp = complete_multipart_upload(host, bucket, object_key, NULL, NULL, NULL, 0, NULL, NULL, NULL);
+    resp = complete_multipart_upload(host, bucket, object_key, NULL, NULL,
+        NULL, NULL, 0, NULL, NULL, NULL);
     CU_ASSERT(NULL == resp);
     
-    resp = complete_multipart_upload(host, bucket, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL);
+    resp = complete_multipart_upload(host, bucket, NULL, NULL, NULL,
+        NULL, NULL, 0, NULL, NULL, NULL);
     CU_ASSERT(NULL == resp);
 
-    resp = complete_multipart_upload(NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL);
+    resp = complete_multipart_upload(NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL, 0, NULL, NULL, NULL);
     CU_ASSERT(NULL == resp);
     
-    resp = complete_multipart_upload("", "", "", "", "", "", 0, "", "", NULL);
+    resp = complete_multipart_upload("", "", "", "", "",
+        "", "", 0, "", "", NULL);
     CU_ASSERT(NULL == resp);
     
     return;
@@ -135,21 +136,23 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_RETURNCODE_NULL(void) {
 
 void TEST_COMPLETE_MULTIPART_UPLOAD_HOST(void) {
     snprintf(object_key, 1024, "%s", __FUNCTION__);
-    if (0 != init_complete(host, bucket, object_key, uploadid_str, com_xml, sizeof(com_xml)) ){
+    if (0 != init_complete()){
         CU_ASSERT(0);
         return ;
     }
-    snprintf(query_str, sizeof(query_str), "uploadId=%s", uploadid_str);
     
-    resp = complete_multipart_upload("", bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload("", bucket, object_key, ak, sk, 
+        uploadid_str, com_xml, strlen(com_xml), NULL, NULL, &error);
     CU_ASSERT(3 == error);
     buffer_free(resp);
     
-    resp = complete_multipart_upload(NULL, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(NULL, bucket, object_key, ak, sk, 
+        uploadid_str, com_xml, strlen(com_xml), NULL, NULL, &error);
     CU_ASSERT(3 == error);
     buffer_free(resp);
 
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {                        
@@ -174,13 +177,13 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_HOST(void) {
 }
 void TEST_COMPLETE_MULTIPART_UPLOAD_BUCKET(void) {
     snprintf(object_key, 1024, "%s", __FUNCTION__);
-    if (0 != init_complete(host, bucket, object_key, uploadid_str, com_xml, sizeof(com_xml)) ){
+    if (0 != init_complete() ){
         CU_ASSERT(0);
         return ;
     }
-    snprintf(query_str, sizeof(query_str), "uploadId=%s", uploadid_str);
     // <Code>NotFoundApi</Code>
-    resp = complete_multipart_upload(host, NULL, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, NULL, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     if (resp->status_code != 404) {                        
@@ -191,7 +194,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_BUCKET(void) {
     }                                                      
     buffer_free(resp);                                                                 
     // <Code>NotFoundApi</Code>
-    resp = complete_multipart_upload(host, "", object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, "", object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     if (resp->status_code != 404) {                        
@@ -203,7 +207,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_BUCKET(void) {
     buffer_free(resp);                                                                 
 
     // <Code>NoSuchBucket</Code>
-    resp = complete_multipart_upload(host, "test-test-test", object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, "test-test-test", object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     if (resp->status_code != 404) {                        
@@ -214,7 +219,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_BUCKET(void) {
     }                                                      
     buffer_free(resp);                                                                 
     // <Code>NoSuchBucket</Code>
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {                        
@@ -242,13 +248,14 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_BUCKET(void) {
 
 void TEST_COMPLETE_MULTIPART_UPLOAD_OBJECT(void) {
     snprintf(object_key, 1024, "%s", __FUNCTION__);
-    if (0 != init_complete(host, bucket, object_key, uploadid_str, com_xml, sizeof(com_xml)) ){
+    if (0 != init_complete() ){
         CU_ASSERT(0);
         return ;
     }
-    snprintf(query_str, sizeof(query_str), "uploadId=%s", uploadid_str);
+    snprintf(query_str, sizeof(query_str), "" );
     // <Code>NotFoundApi</Code>
-    resp = complete_multipart_upload(host, bucket, NULL, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, NULL, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     if (resp->status_code != 404) {                        
@@ -259,7 +266,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_OBJECT(void) {
     }                                                      
     buffer_free(resp);                                                                 
     // <Code>NotFoundApi</Code>
-    resp = complete_multipart_upload(host, bucket, "", ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, "", ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     if (resp->status_code != 404) {                        
@@ -270,7 +278,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_OBJECT(void) {
     }                                                      
     buffer_free(resp);                                                                 
     // <Code>NoSuchUpload</Code>
-    resp = complete_multipart_upload(host, bucket, "1a2b3c", ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, "1a2b3c", ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     if (resp->status_code != 404) {                        
@@ -281,7 +290,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_OBJECT(void) {
     }                                                      
     buffer_free(resp);                                                                 
 
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {                        
@@ -306,25 +316,29 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_OBJECT(void) {
 }
 void TEST_COMPLETE_MULTIPART_UPLOAD_KEY(void) {
     snprintf(object_key, 1024, "%s", __FUNCTION__);
-    if (0 != init_complete(host, bucket, object_key, uploadid_str, com_xml, sizeof(com_xml)) ){
+    if (0 != init_complete() ){
         CU_ASSERT(0);
         return ;
     }
-    snprintf(query_str, sizeof(query_str), "uploadId=%s", uploadid_str);
+    query_str[0] = 0;
     
-    resp = complete_multipart_upload(host, bucket, object_key, NULL, NULL, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, NULL, NULL,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(-1 == error);
     CU_ASSERT(NULL == resp);
     
-    resp = complete_multipart_upload(host, bucket, object_key, "", NULL, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, "", NULL,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(-1 == error);
     CU_ASSERT(NULL == resp);
     
-    resp = complete_multipart_upload(host, bucket, object_key, NULL, "", com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, NULL, "",
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(-1 == error);
     CU_ASSERT(NULL == resp);
     
-    resp = complete_multipart_upload(host, bucket, object_key, "", "", com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, "", "",
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(403 == resp->status_code);
     if (resp->status_code != 403) {                        
@@ -335,7 +349,9 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_KEY(void) {
     }                                                      
     buffer_free(resp);                                                                 
     
-    resp = complete_multipart_upload(host, bucket, object_key, "sdfasdfasd", "7s9d7fasdf9asd89fasdfhsd", com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, "sdfasdfasd",
+        "7s9d7fasdf9asd89fasdfhsd", uploadid_str, 
+        com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(403 == resp->status_code);
     if (resp->status_code != 403) {                        
@@ -346,7 +362,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_KEY(void) {
     }                                                      
     buffer_free(resp);                                                                 
     
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {                        
@@ -371,7 +388,7 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_KEY(void) {
 }
 void TEST_COMPLETE_MULTIPART_UPLOAD_BUFDATAPARA(void) {
     snprintf(object_key, 1024, "%s", __FUNCTION__);
-    if (0 != init_complete(host, bucket, object_key, uploadid_str, com_xml, sizeof(com_xml)) ){
+    if (0 != init_complete() ){
         CU_ASSERT(0);
         return ;
     }
@@ -385,7 +402,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_BUFDATAPARA(void) {
     snprintf(com_xml, sizeof(com_xml), "<CompleteMultipartUpload>\n<Part>\n<PartNumber>%d</PartNumber>\n<ETag>\"%.*s\"</ETag>"
                                 "</Part>\n</CompleteMultipartUpload>", 2, 32, etag);
     // <Code>InvalidPart</Code>    
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(400 == resp->status_code);
     if (resp->status_code != 400) {                        
@@ -427,7 +445,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_BUFDATAPARA(void) {
     snprintf(com_xml, sizeof(com_xml), "<CompleteMultipartUpload>\n<Part>\n<PartNumber>%d</PartNumber>\n<ETag>\"%.*s\"</ETag>"
                                 "</Part>\n</CompleteMultipartUpload>", 1, 32, etag);
         
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {                        
@@ -455,13 +474,14 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_BUFDATAPARA(void) {
 void TEST_COMPLETE_MULTIPART_UPLOAD_QUERYPARA(void) {
     char md5_buf[32];
     snprintf(object_key, 1024, "%s", __FUNCTION__);
-    if (0 != init_complete(host, bucket, object_key, uploadid_str, com_xml, sizeof(com_xml)) ){
+    if (0 != init_complete() ){
         CU_ASSERT(0);
         return ;
     }
     snprintf(query_str, sizeof(query_str), "uploadId=%s", uploadid_str);
     
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {                        
@@ -473,16 +493,36 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_QUERYPARA(void) {
     buffer_free(resp);                                                                 
     
     snprintf(object_key, 1024, "%s", __FUNCTION__);
-    if (0 != init_complete(host, bucket, object_key, uploadid_str, com_xml, sizeof(com_xml)) ){
+    if (0 != init_complete() ){
         CU_ASSERT(0);
         return ;
     }
     snprintf(query_str, sizeof(query_str), "uploadid=%s", uploadid_str);
-    // <Code>NoSuchBucket</Code>
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    //  
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
-    CU_ASSERT(404 == resp->status_code);
-    if (resp->status_code != 404) {                        
+    CU_ASSERT(200 == resp->status_code);
+    if (resp->status_code != 200) {                        
+        printf("test %s:%d:\n", __FUNCTION__, __LINE__);          
+        printf("status code = %ld\n", resp->status_code);  
+        printf("status msg = %s\n", resp->status_msg);     
+        printf("error msg = %s\n", resp->body);            
+    }                                                      
+    buffer_free(resp);                                                                 
+    
+    snprintf(object_key, 1024, "%s", __FUNCTION__);
+    if (0 != init_complete() ){
+        CU_ASSERT(0);
+        return ;
+    }
+    snprintf(query_str, sizeof(query_str), "UPLOADID=%s", uploadid_str);
+    //  
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
+    CU_ASSERT(0 == error);
+    CU_ASSERT(200 == resp->status_code);
+    if (resp->status_code != 200) {                        
         printf("test %s:%d:\n", __FUNCTION__, __LINE__);          
         printf("status code = %ld\n", resp->status_code);  
         printf("status msg = %s\n", resp->status_msg);     
@@ -490,16 +530,18 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_QUERYPARA(void) {
     }                                                      
     buffer_free(resp);                                                                 
 
-    if (0 != init_complete(host, bucket, object_key, uploadid_str, com_xml, sizeof(com_xml)) ){
+
+    if (0 != init_complete() ){
         CU_ASSERT(0);
         return ;
     }
     // <Code>NoSuchUpload</Code>
     snprintf(query_str, sizeof(query_str), "uploadId=%s001", uploadid_str);
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, "", &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, "", &error);
     CU_ASSERT(0 == error);
-    CU_ASSERT(404 == resp->status_code);
-    if (resp->status_code != 404) {                        
+    CU_ASSERT(403 == resp->status_code);
+    if (resp->status_code != 403) {                        
         printf("test %s:%d:\n", __FUNCTION__, __LINE__);          
         printf("status code = %ld\n", resp->status_code);  
         printf("status msg = %s\n", resp->status_msg);     
@@ -524,7 +566,7 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_HEADERPARA(void) {
     char md5_buf[32];
     snprintf(object_key, 1024, "%s", __FUNCTION__);
     snprintf(header_str, 1024, "%s", "");
-    if (0 != init_complete(host, bucket, object_key, uploadid_str, com_xml, sizeof(com_xml)) ){
+    if (0 != init_complete() ){
         CU_ASSERT(0);
         return ;
     }
@@ -543,7 +585,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_HEADERPARA(void) {
     }                                                      
     buffer_free(resp);                                                                 
 #endif
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, 
+        uploadid_str, com_xml, strlen(com_xml), query_str, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {                        
@@ -560,7 +603,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_HEADERPARA(void) {
     }
     snprintf(query_str, sizeof(query_str), "uploadId=%s", uploadid_str);
     snprintf(header_str, 1024, "Content-Type: %s", "text/plain");
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, header_str, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, com_xml, strlen(com_xml), query_str, header_str, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
     if (resp->status_code != 200) {                        
@@ -579,7 +623,8 @@ void TEST_COMPLETE_MULTIPART_UPLOAD_HEADERPARA(void) {
     snprintf(query_str, sizeof(query_str), "uploadId=%s", uploadid_str);
     compute_buf_md5b64(com_xml, strlen(com_xml), md5_buf);
     snprintf(header_str, 1024, "CONTENT-Type: %s", "application/x-www-form-urlencoded");
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, com_xml, strlen(com_xml), query_str, header_str, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, 
+        uploadid_str, com_xml, strlen(com_xml), query_str, header_str, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(503 == resp->status_code);
     if (resp->status_code != 503) {                        

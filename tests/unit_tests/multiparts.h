@@ -335,7 +335,7 @@ RETRY_ONCE:
             printf("[ERROR] %s:%d response no etag\n", __FUNCTION__, __LINE__);
             CU_ASSERT(0);
         }
-        printf("[OK] %s:%d %s %s upload_part OK!\n", __FUNCTION__, __LINE__, query_str, header_str);
+        printf("[OK] %s:%d partNum %d uploadId %s %s upload_part OK!\n", __FUNCTION__, __LINE__, count, uploadid, header_str);
         part_result_arr[count - 1].id = count;
         CU_ASSERT(error == 0);
         CU_ASSERT(200 == resp->status_code);

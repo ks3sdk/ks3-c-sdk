@@ -88,7 +88,7 @@ static int compute_file_md5b64(const char *file_path, char *base64_buf) {
     const int  MD5_SIZE = 16;
     const int  READ_DATA_SIZE = 1024;
 
-    int i;    
+    int i;
     int ret;
     unsigned char data[READ_DATA_SIZE];
     unsigned char md5_value[MD5_SIZE];
@@ -181,18 +181,18 @@ static int multiparts_upload(const char* host, const char* bucket, const char* o
     char header_str[1024];
     buffer *resp = NULL;
 
-    long file_len = 0; 
+    long file_len = 0;
     long part_size = 0;
     long part_num = 0;
 
     file_len = get_file_size(filename);
-    if (file_len > FIRST_MIN_PART_SIZE * 10000) 
+    if (file_len > FIRST_MIN_PART_SIZE * 10000)
         part_size = file_len / 10000;
     else if (file_len >= FIRST_MIN_PART_SIZE && file_len <= FIRST_MIN_PART_SIZE * 10000)
         part_size = FIRST_MIN_PART_SIZE;
     else if (file_len >= SECOND_MIN_PART_SIZE && file_len < FIRST_MIN_PART_SIZE)
         part_size = SECOND_MIN_PART_SIZE;
-    else 
+    else
         part_size = file_len;
 
     long buf_size = part_size;
@@ -227,10 +227,10 @@ RETRY_ONCE:
         read_length = read_file(filename, buf, file_len - remain_len, part_size);
 
         compute_buf_md5b64(buf, part_size, base64_buf);
-        snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", count, uploadid);
+        //snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", count, uploadid);
         snprintf(header_str, 1024, "Content-Md5: %s", base64_buf);
-        resp = upload_part(host, bucket, object_key, access_key, secret_key, buf, part_size,
-            query_str, header_str, &error);
+        resp = upload_part(host, bucket, object_key, access_key, secret_key,
+            uploadid, count, buf, part_size, NULL, header_str, &error);
         if (resp->status_code != 200) {
             printf("test upload_part:\n");
             printf("status code = %ld\n", resp->status_code);
@@ -253,7 +253,7 @@ RETRY_ONCE:
         else {
             printf("[ERROR] %s:%d response no etag\n", __FUNCTION__, __LINE__);
         }
-        printf("[OK] %s:%d %s %s upload_part OK!\n", __FUNCTION__, __LINE__, query_str, header_str);
+        printf("[OK] %s:%d partNum=%d uploadId=%s %s upload_part OK!\n", __FUNCTION__, __LINE__, count, uploadid, header_str);
         part_result_arr[count - 1].id = count;
         buffer_free(resp);
         remain_len -= part_size;

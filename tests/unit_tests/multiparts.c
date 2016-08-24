@@ -136,7 +136,8 @@ void TEST_MULTIPARTS_COMPLETE_00(void) {
 
     // 4. list_parts
     snprintf(query_str, 1024, "uploadId=%s", objectid_str);
-    resp = list_parts(host, bucket, object_key, ak, sk, query_str, NULL, &error);
+    resp = list_parts(host, bucket, object_key, ak, sk, 
+        objectid_str, query_str, NULL, &error);
 
     if (resp->status_code != 200) {
         printf("test list_parts:\n");
@@ -182,8 +183,8 @@ void TEST_MULTIPARTS_COMPLETE_00(void) {
     buffer_free(resp);
 
     snprintf(query_str, 1024, "uploadId=%s", objectid_str);
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, dat, dat_len, query_str, NULL, &error);
-
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, 
+        objectid_str, dat, dat_len, query_str, NULL, &error);
     if (resp->status_code != 200) {
         printf("test complete_multipart_upload:\n");
         printf("status code = %ld\n", resp->status_code);
@@ -281,7 +282,8 @@ void TEST_MULTIPARTS_COMPLETE_01(void) {
     dat_len += print_len;
 
     snprintf(query_str, 1024, "uploadId=%s", uploadid_str);
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, dat, dat_len, query_str, NULL, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        uploadid_str, dat, dat_len, NULL, NULL, &error);
 
     if (resp->status_code != 200) {
         printf("test complete_multipart_upload:\n");
@@ -381,21 +383,21 @@ void TEST_MULTIPARTS_ABORT_02(void) {
 
     // 4. list_parts
     snprintf(query_str, 1024, "uploadId=%s", objectid_str);
-    resp = list_parts(host, bucket, object_key, ak, sk, query_str, NULL, &error);
-
+    resp = list_parts(host, bucket, object_key, ak, sk, 
+        objectid_str, query_str, NULL, &error);
     if (resp->status_code != 200) {
         printf("test list_parts:\n");
         printf("status code = %ld\n", resp->status_code);
         printf("status msg = %s\n", resp->status_msg);
         printf("error msg = %s\n", resp->body);
-
     }
     CU_ASSERT(error == 0);
     CU_ASSERT(200 == resp->status_code);
 
     // 5. abort_multipart_upload
     snprintf(query_str, 1024, "uploadId=%s", objectid_str);
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk,
+        objectid_str, query_str, NULL, &error);
     if (resp->status_code != 204) {
         printf("test abort_multipart_upload:\n");
         printf("status code = %ld\n", resp->status_code);
@@ -501,8 +503,10 @@ void TEST_LIST_PARTS_03(void) {
     // list_parts
     do {
         keep_on = 0;
-        snprintf(query_str, 1024, "uploadId=%s&max-parts=%d&part-number-marker=%d", upload_id, part_num_per, next_num);
-        resp = list_parts(host, bucket, object_key, ak, sk, query_str, NULL, &error);
+        snprintf(query_str, 1024, "uploadId=%s&max-parts=%d&part-number-marker=%d", 
+            upload_id, part_num_per, next_num);
+        resp = list_parts(host, bucket, object_key, ak, sk, 
+            upload_id, query_str, NULL, &error);
 
         if (resp->status_code != 200) {
             printf("test list_parts:\n");
@@ -541,7 +545,8 @@ void TEST_LIST_PARTS_03(void) {
     dat_len += print_len;
     snprintf(query_str, 1024, "uploadId=%s", upload_id);    
     snprintf(header_str, 1024, "Content-Type: text/xml");
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, dat, dat_len, query_str, header_str, &error);
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, 
+        upload_id, dat, dat_len, query_str, header_str, &error);
     if (resp->status_code != 200) {
         printf("test complete_multipart_upload:\n");
         printf("status code = %ld\n", resp->status_code);
@@ -665,15 +670,15 @@ void TEST_MULTIPARTS_UPLOAD_DOWNLOAD_04(void) {
     // list_parts
     do {
         keep_on = 0;
-        snprintf(query_str, 1024, "uploadId=%s&max-parts=%d&part-number-marker=%d", upload_id, 300, next_num);
-        resp = list_parts(host, bucket, object_key, ak, sk, query_str, NULL, &error);
-
+        snprintf(query_str, 1024, "uploadId=%s&max-parts=%d&part-number-marker=%d",
+            upload_id, 300, next_num);
+        resp = list_parts(host, bucket, object_key, ak, sk, 
+            upload_id, query_str, NULL, &error);
         if (resp->status_code != 200) {
             printf("test list_parts: %s:%d\n", __FUNCTION__, __LINE__);
             printf("status code = %ld\n", resp->status_code);
             printf("status msg = %s\n", resp->status_msg);
             printf("error msg = %s\n", resp->body);
-
         }
         CU_ASSERT(error == 0);
         CU_ASSERT(200 == resp->status_code);
@@ -707,8 +712,8 @@ void TEST_MULTIPARTS_UPLOAD_DOWNLOAD_04(void) {
 
     snprintf(query_str, 1024, "uploadId=%s", upload_id);
     snprintf(header_str, 1024, "Content-Type: application/xml");
-    resp = complete_multipart_upload(host, bucket, object_key, ak, sk, dat, dat_len, query_str, header_str, &error);
-
+    resp = complete_multipart_upload(host, bucket, object_key, ak, sk,
+        upload_id, dat, dat_len, query_str, header_str, &error);
     if (resp->status_code != 200) {
         printf("test complete_multipart_upload: %s:%d \n", __FUNCTION__, __LINE__);
         printf("status code = %ld\n", resp->status_code);
@@ -778,7 +783,8 @@ void TEST_LIST_PARTS_05(void) {
     do {
         keep_on = 0;
         snprintf(query_str, 1024, "uploadId=%s&max-parts=%d&part-number-marker=%d", upload_id, part_num, next_num);
-        resp = list_parts(host, bucket, object_key, ak, sk, query_str, NULL, &error);
+        resp = list_parts(host, bucket, object_key, ak, sk, 
+            upload_id, query_str, NULL, &error);
         if (resp->status_code != 200) {
             printf("test list_parts:\n");
             printf("status code = %ld\n", resp->status_code);
@@ -923,7 +929,8 @@ void TEST_LIST_MULTIPARTS(void) {
         snprintf(object_key, 1024, "%s", buf + off_arr[i++]);
         snprintf(query_str, 1024, "uploadId=%s", buf + off_arr[i++]);
 
-        resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_str, NULL, &error);
+        resp = abort_multipart_upload(host, bucket, object_key, ak, sk, 
+            query_str + strlen("uploadId="), NULL, NULL, &error);
         if (resp->status_code != 204) {
             printf("test abort_multipart_upload: i = %d\n", i - 2);
             printf("status code = %ld\n", resp->status_code);
@@ -950,6 +957,7 @@ void TEST_LIST_MULTIPARTS_01(void) {
     char query_str[1024];
     char header_str[1024];
     char upload_id[128] = { 0 };
+    char sub_upload_id[128] = {0};
     char sub_object_key[1024];
     char sub_query_str[1024];
     char sub_header_str[1024];    
@@ -1037,8 +1045,10 @@ void TEST_LIST_MULTIPARTS_01(void) {
             key_end = strstr(key_ptr, "</UploadId>");
             key_len = key_end - key_ptr;
             snprintf(sub_query_str, 1024, "uploadId=%.*s", key_len, key_ptr);
+            snprintf(sub_upload_id, sizeof(sub_upload_id), "%.*s", key_len, key_ptr);  
 
-            sub_resp = abort_multipart_upload(host, bucket, sub_object_key, ak, sk, sub_query_str, NULL, &error);
+            sub_resp = abort_multipart_upload(host, bucket, sub_object_key, ak, sk, 
+                sub_upload_id, sub_query_str, NULL, &error);
             if (sub_resp->status_code != 204) {
                 printf("test %s:%d abort_multipart_upload:\n", __FUNCTION__, __LINE__);
                 printf("status code = %ld\n", sub_resp->status_code);
