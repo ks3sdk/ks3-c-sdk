@@ -24,22 +24,27 @@ int clean_suite1(void) {
     return 0;
 }
 
-void check_resp(const char* body, int expect) {
+void GetNextUploadIdMarker(const char* body, char* value) {
+    const char* marker_start = "<NextUploadIdMarker>";
+    const char* marker_end = "</NextUploadIdMarker>";
+    int len = strlen(marker_start);
+
+    char* begin = strstr(body, marker_start);
+    if (begin != NULL) {
+        char* end = strstr(begin + len, marker_end);
+        strncpy(value, begin + len, end - begin - len);
+    }
+}
+
+void GetTruncated(const char* body, char* value) {
     char* is_truncated_start = "<IsTruncated>";
     char* is_truncated_end = "</IsTruncated>";
     int len = strlen(is_truncated_start);
-    char truncated[5] = { '\0' };
 
     char* begin = strstr(body, is_truncated_start);
     if (begin != NULL) {
         char* end = strstr(begin + len, is_truncated_end);
-        strncpy(truncated, begin + len, end - begin - len);
-        if (expect == 0) {
-            CU_ASSERT(strncmp(truncated, "false", strlen(truncated)) == 0);
-        } else {
-            CU_ASSERT(strncmp(truncated, "true", strlen(truncated)) == 0);
-        }
-        printf("%s\n", truncated);
+        strncpy(value, begin + len, end - begin - len);
     } else {
         CU_ASSERT(0 == 1);
     }
@@ -104,7 +109,9 @@ void clean_bucket(void) {
         }
         if (upload_id_marker[0] != 0 && key_marker[0] != 0) {
             has_next = 1;
-            snprintf(query_str, 1024, "uploads&max-uploads=%d&key-marker=%s&upload-id-marker=%s", max_uploads, key_marker, upload_id_marker);
+            snprintf(query_str, 1024,
+                    "uploads&max-uploads=%d&key-marker=%s&upload-id-marker=%s",
+                    max_uploads, key_marker, upload_id_marker);
         }
         key_ptr = strstr(content, "<Key>");
         while(key_ptr) {
@@ -118,8 +125,11 @@ void clean_bucket(void) {
             key_end = strstr(key_ptr, "</UploadId>");
             key_len = key_end - key_ptr;
             snprintf(sub_query_str, 1024, "uploadId=%.*s", key_len, key_ptr);
+            char upload_id[1024] = { '\0' };
+            strncpy(upload_id, key_ptr, key_len);
 
-            sub_resp = abort_multipart_upload(host, bucket, sub_object_key, ak, sk, sub_query_str, NULL, &error);
+            sub_resp = abort_multipart_upload(host, bucket, sub_object_key,
+                    ak, sk, upload_id, NULL, NULL, &error);
             if (sub_resp->status_code != 204) {
                 printf("test %s:%d abort_multipart_upload:\n", __FUNCTION__, __LINE__);
                 printf("status code = %ld\n", sub_resp->status_code);
@@ -228,7 +238,7 @@ void TEST_LIST_MULTIPART_UPLOADS_HOST(void) {
     // abort multipart uplaod finally
     char uploadIdStr[100] = { '\0' };
     snprintf(uploadIdStr, 100, "uploadId=%s", uploadId);
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadIdStr, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadId, NULL, NULL, &error);
     CU_ASSERT(resp != NULL);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
@@ -327,7 +337,7 @@ void TEST_LIST_MULTIPART_UPLOADS_BUCKET(void) {
     // abort uploadId finally
     char uploadIdStr[100] = { '\0' };
     snprintf(uploadIdStr, 100, "uploadId=%s", uploadId);
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadIdStr, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadId, NULL, NULL, &error);
     CU_ASSERT(resp != NULL);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
@@ -404,7 +414,7 @@ void TEST_LIST_MULTIPART_UPLOADS_KEY(void) {
     // abort uploadId finally
     char uploadIdStr[100] = { '\0' };
     snprintf(uploadIdStr, 100, "uploadId=%s", uploadId);
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadIdStr, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadId, NULL, NULL, &error);
     CU_ASSERT(resp != NULL);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
@@ -481,7 +491,7 @@ void TEST_LIST_MULTIPART_UPLOADS_QUERYPARA(void) {
     // abort uploadId finally
     char uploadIdStr[100] = { '\0' };
     snprintf(uploadIdStr, 100, "uploadId=%s", uploadId);
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadIdStr, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadId, NULL, NULL, &error);
     CU_ASSERT(resp != NULL);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
@@ -555,7 +565,7 @@ void TEST_LIST_MULTIPART_UPLOADS_HEADERPARA(void) {
     // abort uploadId finally
     char uploadIdStr[100] = { '\0' };
     snprintf(uploadIdStr, 100, "uploadId=%s", uploadId);
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadIdStr, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadId, NULL, NULL, &error);
     CU_ASSERT(resp != NULL);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
@@ -612,13 +622,17 @@ void TEST_LIST_MULTIPART_UPLOADS_MULTI_TIMES(void) {
         printf("status msg = %s\n", resp->status_msg);     
         printf("error msg = %s\n", resp->body);            
     }
-    // check 3 results, IsTruncated = true
-    check_resp(resp->body, 1);
+    // check results, ret 3 uploadId, IsTruncated = true
+    char truncated[5] = {'\0'};
+    GetTruncated(resp->body, truncated);
+    CU_ASSERT(strncmp(truncated, "true", strlen(truncated)) == 0);
+    char upload_id_marker[100] = {'\0'};
+    GetNextUploadIdMarker(resp->body, upload_id_marker);
     buffer_free(resp);
     // list with key-marker and upload-id-marker
-    snprintf(query_args, 100, "uploads&max-uploads=3"
+    snprintf(query_args, 100, "UPLOADS&max-uploads=4"
             "&key-marker=TEST_LIST_MULTIPART_UPLOADS_MULTI_TIMES_2"
-            "&upload-id-marker=8b06bacfa6904683bfd30d854ff9b6ce");
+            "&upload-id-marker=%s", upload_id_marker);
     resp = list_multipart_uploads(host, bucket,
             ak, sk, query_args, NULL, &error); CU_ASSERT(0 == error);
     CU_ASSERT(200 == resp->status_code);
@@ -628,8 +642,10 @@ void TEST_LIST_MULTIPART_UPLOADS_MULTI_TIMES(void) {
         printf("status msg = %s\n", resp->status_msg);     
         printf("error msg = %s\n", resp->body);            
     }
-    // check 2 results
-    check_resp(resp->body, 0);
+    // check results, ret 2 uploadId, and isTruncated = false
+    char truncated2[5] = {'\0'};
+    GetTruncated(resp->body, truncated2);
+    CU_ASSERT(strncmp(truncated2, "false", strlen(truncated2)) == 0);
     buffer_free(resp);
 
     // abort uploadId finally
@@ -637,7 +653,7 @@ void TEST_LIST_MULTIPART_UPLOADS_MULTI_TIMES(void) {
         char uploadIdStr[100] = { '\0' };
         snprintf(object_key, 1024, "%s_%d", __FUNCTION__, i);
         snprintf(uploadIdStr, 100, "uploadId=%s", argv[i]);
-        resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadIdStr, NULL, &error);
+        resp = abort_multipart_upload(host, bucket, object_key, ak, sk, argv[i], NULL, NULL, &error);
         CU_ASSERT(resp != NULL);
         CU_ASSERT(0 == error);
         CU_ASSERT(204 == resp->status_code);
