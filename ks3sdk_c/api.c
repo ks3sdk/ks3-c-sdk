@@ -326,8 +326,8 @@ buffer* list_multipart_uploads(const char* host, const char* bucket,
 
 buffer* list_parts(const char* host,
     const char* bucket, const char* object_key,
-    const char* upload_id, const char* access_key,
-    const char* secret_key, const char* query_args,
+    const char* access_key, const char* secret_key,
+    const char* upload_id, const char* query_args,
     const char* headers, int* err) {
     if (check_params(access_key, secret_key, err) != 0) {
         return NULL;
