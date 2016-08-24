@@ -296,14 +296,17 @@ RETRY_TAG:
         snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", info->part_num, upload_id_.c_str());
         snprintf(header_str, 1024, "Content-Md5: %s", base64_buf);
         resp = upload_part(ks3Info_.host.c_str(), ks3Info_.bucket.c_str(), object_key_.c_str(), 
-                ks3Info_.access_key.c_str(), ks3Info_.secret_key.c_str(), buf_ptr, info->size, query_str, header_str, &ret_code);
+                ks3Info_.access_key.c_str(), ks3Info_.secret_key.c_str(), 
+                upload_id_.c_str(), info->part_num, buf_ptr, info->size, NULL, header_str, &ret_code);
         if (ret_code != 0) {
             retry_num++;
-            printf("[WARN] %s:%d %s %s %s upload_part failed! ret_code=%d\n", __FUNCTION__, __LINE__, object_key_.c_str(), query_str, header_str, ret_code);
+            printf("[WARN] %s:%d %s %s %s upload_part failed! ret_code=%d\n",
+                __FUNCTION__, __LINE__, object_key_.c_str(), query_str, header_str, ret_code);
             if ( retry_num <= max_retry_num)
                 goto RETRY_TAG;
             else {
-                printf("[ERROR] %s:%d %s %s %s upload_part failed! ret_code=%d\n", __FUNCTION__, __LINE__, object_key_.c_str(), query_str, header_str, ret_code);
+                printf("[ERROR] %s:%d %s %s %s upload_part failed! ret_code=%d\n",
+                    __FUNCTION__, __LINE__, object_key_.c_str(), query_str, header_str, ret_code);
                 break;
             }
         }
@@ -313,7 +316,8 @@ RETRY_TAG:
             printf("status code = %ld\n", resp->status_code);
             printf("status msg = %s\n", resp->status_msg);
             printf("error msg = %s\n", resp->body);
-            printf("[ERROR] %s:%d %s %s upload_part failed!\n", __FUNCTION__, __LINE__, query_str, header_str);
+            printf("[ERROR] %s:%d %s %s upload_part failed!\n",
+                __FUNCTION__, __LINE__, query_str, header_str);
             break;
         }
         char *etag_ptr = strstr(resp->header, "ETag: \"");
@@ -322,7 +326,8 @@ RETRY_TAG:
             strncpy(info->etag, etag_ptr, ETAG_LEN);
         }
         
-        printf("[OK] seq=%d %s:%d %s %s upload_part OK!\n", seq_,  __FUNCTION__, __LINE__, query_str, header_str);
+        printf("[OK] seq=%d %s:%d %s %s upload_part OK!\n", 
+            seq_, __FUNCTION__, __LINE__, query_str, header_str);
         buffer_free(resp);
 
         thread_mutex_[1].Lock();
@@ -358,10 +363,10 @@ int Ks3Worker::Finish() {
     }
     complete_str += "</CompleteMultipartUpload>";
     
-    resp = complete_multipart_upload(ks3Info_.host.c_str(), ks3Info_.bucket.c_str(), object_key_.c_str(), 
-            ks3Info_.access_key.c_str(), ks3Info_.secret_key.c_str(), complete_str.c_str(), complete_str.length(), 
-            query_str.c_str(), NULL, &error);
-
+    resp = complete_multipart_upload(ks3Info_.host.c_str(), ks3Info_.bucket.c_str(), 
+            object_key_.c_str(), ks3Info_.access_key.c_str(), ks3Info_.secret_key.c_str(), 
+            upload_id_.c_str(), complete_str.c_str(), complete_str.length(), 
+            NULL, NULL, &error);
     if (resp->status_code != 200) {
         printf("test complete_multipart_upload: seq=%d\n", seq_);
         printf("status code = %ld\n", resp->status_code);
@@ -370,8 +375,10 @@ int Ks3Worker::Finish() {
 
         buffer_free(resp);
 
-        resp = abort_multipart_upload(ks3Info_.host.c_str(), ks3Info_.bucket.c_str(), object_key_.c_str(), 
-                ks3Info_.access_key.c_str(), ks3Info_.secret_key.c_str(), query_str.c_str(), NULL, &error);
+        resp = abort_multipart_upload(ks3Info_.host.c_str(), ks3Info_.bucket.c_str(),
+                object_key_.c_str(), ks3Info_.access_key.c_str(), 
+                ks3Info_.secret_key.c_str(), upload_id_.c_str(),
+                query_str.c_str(), NULL, &error);
         if (resp->status_code != 204) {
             printf("test abort_multipart_upload: seq=%d\n", seq_);
             printf("status code = %ld\n", resp->status_code);
