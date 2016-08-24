@@ -30,7 +30,7 @@ static int check_params(const char* access_key, const char* secret_key, int* err
 static int check_buf(const char * buf_data, int buf_len) {
     if (NULL == buf_data || buf_len <= 0) {
         fprintf(stderr, "buf_data is NULL or buf_len less then zero\n");
-        return -2;
+        return -1;
     }
     return 0;
 }
@@ -123,6 +123,7 @@ buffer* upload_object(const char* host, const char* bucket,
         return NULL;
     }
     if (check_buf(buf_data, buf_len) != 0) {
+        *err = -1;
         return NULL;
     }
     buffer* resp = NULL;
@@ -218,13 +219,16 @@ buffer* upload_part(const char* host, const char* bucket,
         return NULL;
     }
     if (check_buf(part_data, part_data_len) != 0) {
+        *err = -1;
         return NULL;
     }
     if (upload_id == NULL || strlen(upload_id) <= 0) {
+        *err = -1;
         fprintf(stderr, "upload_id is NULL\n");
         return NULL;
     }
     if (part_number < 1 || part_number > 10000) {
+        *err = -1;
         fprintf(stderr, "part_number %d not in range [1-10000]\n", part_number);
         return NULL;
     }
@@ -252,10 +256,12 @@ buffer* complete_multipart_upload(const char* host,
         return NULL;
     }
     if (upload_id == NULL || strlen(upload_id) <= 0) {
+        *err = -1;
         fprintf(stderr, "upload_id is NULL\n");
         return NULL;
     }
     if (parts_info == NULL || strlen(parts_info) <= 0 || parts_info_len <= 0) {
+        *err = -1;
         fprintf(stderr, "parts_info is NULL\n");
         return NULL;
     }
@@ -281,6 +287,7 @@ buffer* abort_multipart_upload(const char* host,
         return NULL;
     }
     if (upload_id == NULL || strlen(upload_id) <= 0) {
+        *err = -1;
         fprintf(stderr, "upload_id is NULL\n");
         return NULL;
     }
@@ -326,6 +333,7 @@ buffer* list_parts(const char* host,
         return NULL;
     }
     if (upload_id == NULL || strlen(upload_id) <= 0) {
+        *err = -1;
         fprintf(stderr, "upload_id is NULL\n");
         return NULL;
     }
