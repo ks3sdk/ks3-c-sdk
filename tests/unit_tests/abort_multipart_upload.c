@@ -4,7 +4,7 @@
 #include "api.h"
 #include "md5.h"
 #include "./load_key.h"
-#include "multiparts.h"
+//#include "multiparts.h"
 
 
 /* The suite initialization function.
@@ -38,42 +38,43 @@ const char* bucket = "bucket-test-for-abort-multipart-upload";
 
 void TEST_ABORT_MULTIPART_UPLOAD_ALL_NULL(void) {
     buffer *resp = NULL;
-    resp = abort_multipart_upload(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    resp = abort_multipart_upload(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     CU_ASSERT(NULL == resp);
 }
 
 void TEST_ABORT_MULTIPART_UPLOAD_RETURNCODE_NULL(void) {
     buffer *resp = NULL;
     snprintf(object_key, 1024, "%s", __FUNCTION__);
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, NULL, NULL, NULL);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, NULL, NULL, NULL, NULL);
     CU_ASSERT(NULL == resp);
 
-    resp = abort_multipart_upload(host, bucket, object_key, NULL, NULL, NULL, NULL, NULL);
+    resp = abort_multipart_upload(host, bucket, object_key, NULL, NULL, NULL, NULL, NULL, NULL);
     CU_ASSERT(NULL == resp);
     
-    resp = abort_multipart_upload(host, bucket, NULL, NULL, NULL, NULL, NULL, NULL);
+    resp = abort_multipart_upload(host, bucket, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     CU_ASSERT(NULL == resp);
 
-    resp = abort_multipart_upload(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    resp = abort_multipart_upload(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     CU_ASSERT(NULL == resp);
 }
 
 void TEST_ABORT_MULTIPART_UPLOAD_HOST(void) {
+    const char* upload_id = "test";
     buffer *resp = NULL;
     snprintf(object_key, 1024, "%s", __FUNCTION__);
-    resp = abort_multipart_upload(NULL, bucket, object_key, ak, sk, NULL, NULL, &error);
+    resp = abort_multipart_upload(NULL, bucket, object_key, ak, sk, upload_id, NULL, NULL, &error);
     CU_ASSERT(3 == error);
     buffer_free(resp);
 
-    resp = abort_multipart_upload(NULL, NULL, object_key, ak, sk, NULL, NULL, &error);
+    resp = abort_multipart_upload(NULL, NULL, object_key, ak, sk, upload_id, NULL, NULL, &error);
     CU_ASSERT(3 == error);
     buffer_free(resp);
     
-    resp = abort_multipart_upload(NULL, NULL, NULL, ak, sk, NULL, NULL, &error);
+    resp = abort_multipart_upload(NULL, NULL, NULL, ak, sk, upload_id, NULL, NULL, &error);
     CU_ASSERT(3 == error);
     buffer_free(resp);
 
-    resp = abort_multipart_upload(NULL, NULL, NULL, NULL, NULL, NULL, NULL, &error); 
+    resp = abort_multipart_upload(NULL, NULL, NULL, NULL, NULL, upload_id, NULL, NULL, &error); 
     CU_ASSERT(-1 == error);                                                      
     CU_ASSERT(NULL == resp);
 }
@@ -98,7 +99,7 @@ void TEST_ABORT_MULTIPART_UPLOAD_NORMAL(void) {
     resp = NULL; error = -1;
     char query_args[200] = { '\0' };
     snprintf(query_args, 1024, "uploadId=%s", uploadId);
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_args, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadId, query_args, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
     if (resp->status_code != 204) {                        
@@ -109,7 +110,7 @@ void TEST_ABORT_MULTIPART_UPLOAD_NORMAL(void) {
     }
     buffer_free(resp);
     // abort uploadId not exist
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_args, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, uploadId, query_args, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
     if (resp->status_code != 204) {                        
@@ -122,13 +123,14 @@ void TEST_ABORT_MULTIPART_UPLOAD_NORMAL(void) {
 }
 
 void TEST_ABORT_MULTIPART_UPLOAD_BUCKET(void) {
+    const char* upload_id = "test";
     buffer *resp = NULL;
     snprintf(object_key, 1024, "%s", __FUNCTION__);
-    resp = abort_multipart_upload(host, NULL, NULL, NULL, NULL, NULL, NULL, &error);
+    resp = abort_multipart_upload(host, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &error);
     CU_ASSERT(NULL == resp);
     buffer_free(resp);
     
-    resp = abort_multipart_upload(host, NULL, NULL, ak, sk, NULL, NULL, &error);
+    resp = abort_multipart_upload(host, NULL, NULL, ak, sk, upload_id, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(405 == resp->status_code);
     if (resp->status_code != 405) {
@@ -139,7 +141,7 @@ void TEST_ABORT_MULTIPART_UPLOAD_BUCKET(void) {
     }
     buffer_free(resp);
     
-    resp = abort_multipart_upload(host, NULL, object_key, ak, sk, NULL, NULL, &error);
+    resp = abort_multipart_upload(host, NULL, object_key, ak, sk, upload_id, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(405 == resp->status_code);
     if (resp->status_code != 405) {
@@ -165,7 +167,8 @@ void TEST_ABORT_MULTIPART_UPLOAD_BUCKET(void) {
     */
 
     // bucket not exist
-    resp = abort_multipart_upload(host, "bucket-not-exist", object_key, ak, sk, NULL, NULL, &error);
+    resp = abort_multipart_upload(host, "bucket-not-exist", object_key,
+            ak, sk, upload_id, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     if (resp->status_code != 404) {
@@ -178,18 +181,22 @@ void TEST_ABORT_MULTIPART_UPLOAD_BUCKET(void) {
 }
 
 void TEST_ABORT_MULTIPART_UPLOAD_OBJECT(void) {
+    const char* upload_id = "test";
     buffer *resp = NULL;
     snprintf(object_key, 1024, "%s", __FUNCTION__);
 
-    resp = abort_multipart_upload(host, bucket, NULL, NULL, NULL, NULL, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, NULL, NULL, NULL,
+            upload_id, NULL, NULL, &error);
     CU_ASSERT(-1 == error);
     CU_ASSERT(NULL == resp);
     
-    resp = abort_multipart_upload(host, bucket, object_key, NULL, NULL, NULL, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, NULL, NULL,
+            upload_id,  NULL, NULL, &error);
     CU_ASSERT(-1 == error);
     CU_ASSERT(NULL == resp);
 
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, NULL, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk,
+            upload_id, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     if (resp->status_code != 404) {
@@ -203,22 +210,27 @@ void TEST_ABORT_MULTIPART_UPLOAD_OBJECT(void) {
     return;
 }
 void TEST_ABORT_MULTIPART_UPLOAD_KEY(void) {
+    const char* upload_id = "test";
     buffer *resp = NULL;
     snprintf(object_key, 1024, "%s", __FUNCTION__);
 
-    resp = abort_multipart_upload(host, bucket, object_key, NULL, NULL, NULL, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, NULL,
+            NULL, upload_id, NULL, NULL, &error);
     CU_ASSERT(-1 == error);
     CU_ASSERT(NULL == resp);
     
-    resp = abort_multipart_upload(host, bucket, object_key, ak, NULL, NULL, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, NULL,
+            upload_id, NULL, NULL, &error);
     CU_ASSERT(-1 == error);
     CU_ASSERT(NULL == resp);
     
-    resp = abort_multipart_upload(host, bucket, object_key, NULL, sk, NULL, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, NULL,
+            sk, upload_id, NULL, NULL, &error);
     CU_ASSERT(-1 == error);
     CU_ASSERT(NULL == resp);
 
-    resp = abort_multipart_upload(host, bucket, object_key, "asdfghjkl", "qwertyuiop", NULL, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, "asdfghjkl", "qwertyuiop",
+            upload_id, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(403 == resp->status_code);
     if (resp->status_code != 403) {
@@ -229,7 +241,8 @@ void TEST_ABORT_MULTIPART_UPLOAD_KEY(void) {
     }
     buffer_free(resp);
     
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, NULL, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk,
+            upload_id, NULL, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(404 == resp->status_code);
     if (resp->status_code != 404) {
@@ -261,7 +274,8 @@ void TEST_ABORT_MULTIPART_UPLOAD_QUERYPARA(void) {
     char query_args[100] = { '\0' };
     snprintf(query_args, 100, " uploadId=%s", uploadId);
     // invalid http request : has space in query_args
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_args, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk,
+            uploadId, query_args, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(400 == resp->status_code);
     if (resp->status_code != 400) {
@@ -273,10 +287,11 @@ void TEST_ABORT_MULTIPART_UPLOAD_QUERYPARA(void) {
     buffer_free(resp);
     // abort : query args smaller letter
     snprintf(query_args, 100, "uploadid=%s", uploadId);
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_args, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk,
+            uploadId, query_args, NULL, &error);
     CU_ASSERT(0 == error);
-    CU_ASSERT(403 == resp->status_code);
-    if (resp->status_code != 403) {
+    CU_ASSERT(204 == resp->status_code);
+    if (resp->status_code != 204) {
         printf("test %s:%d:\n", __FUNCTION__, __LINE__);
         printf("status code = %ld\n", resp->status_code);
         printf("status msg = %s\n", resp->status_msg);
@@ -286,10 +301,11 @@ void TEST_ABORT_MULTIPART_UPLOAD_QUERYPARA(void) {
 
     // abort : query args bigger letter
     snprintf(query_args, 100, "uploadID=%s", uploadId);
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_args, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk,
+            uploadId, query_args, NULL, &error);
     CU_ASSERT(0 == error);
-    CU_ASSERT(403 == resp->status_code);
-    if (resp->status_code != 403) {
+    CU_ASSERT(204 == resp->status_code);
+    if (resp->status_code != 204) {
         printf("test %s:%d:\n", __FUNCTION__, __LINE__);
         printf("status code = %ld\n", resp->status_code);
         printf("status msg = %s\n", resp->status_msg);
@@ -299,7 +315,8 @@ void TEST_ABORT_MULTIPART_UPLOAD_QUERYPARA(void) {
 
     // abort : normal
     snprintf(query_args, 100, "uploadId=%s", uploadId);
-    resp = abort_multipart_upload(host, bucket, object_key, ak, sk, query_args, NULL, &error);
+    resp = abort_multipart_upload(host, bucket, object_key, ak, sk,
+            uploadId, query_args, NULL, &error);
     CU_ASSERT(0 == error);
     CU_ASSERT(204 == resp->status_code);
     if (resp->status_code != 204) {
@@ -371,10 +388,10 @@ int main() {
     CU_basic_run_tests();
     CU_cleanup_registry();
 
-    ret = DeleteBucket(host, bucket);
-    if (ret != 0) {
-        printf("[ERROR] delete bucket failed\n");
-    }
+    //ret = DeleteBucket(host, bucket);
+    //if (ret != 0) {
+    //    printf("[ERROR] delete bucket failed\n");
+    //}
     
     ks3_global_destroy();
     return CU_get_error();
