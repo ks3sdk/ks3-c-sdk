@@ -5,7 +5,7 @@ static rb_node_t* rb_new_node(key_value* kv) {
     rb_node_t* node = (rb_node_t *) malloc (sizeof(struct rb_node_t)); 
 
     if (!node) {
-        printf("malloc error!\n");
+        fprintf(stderr, "malloc error!\n");
         exit(-1);
     }
 
@@ -282,7 +282,7 @@ int rb_erase_compare(key_value* kv, rb_node_t* root,
     exist = rb_search_auxiliary_compare(kv, root, NULL, compare_func, &node);
     if (exist != 0) {
         // node not exists
-        printf("key does not exist!\n");
+        fprintf(stderr, "key does not exist!\n");
         *ret = root;
         return exist; 
     }
