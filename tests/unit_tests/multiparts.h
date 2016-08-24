@@ -84,7 +84,8 @@ static const char* now_str(char *buf, int buf_size) {
     cp_localtime(time(NULL), &tm_buf, 8);
 
     snprintf(buf, buf_size, "%d-%d-%d %d:%d:%d",
-            tm_buf.tm_year + 1900, tm_buf.tm_mon + 1, tm_buf.tm_mday, tm_buf.tm_hour, tm_buf.tm_min, tm_buf.tm_sec);
+            tm_buf.tm_year + 1900, tm_buf.tm_mon + 1, tm_buf.tm_mday,
+            tm_buf.tm_hour, tm_buf.tm_min, tm_buf.tm_sec);
 
     return buf;
 }
@@ -235,7 +236,8 @@ static int64_t read_file(const char* filename, char* buf, int64_t offset, int64_
     fseek(fp, offset, SEEK_SET);
     int64_t rlen = fread(buf, 1, len, fp);
     if (rlen != len) {
-        printf("[ERROR] read file=%s failed: offset=%ld, len=%ld, but read len is : %ld\n", filename, offset, len, rlen);
+        printf("[ERROR] read file=%s failed: offset=%ld, len=%ld,"
+                " but read len is : %ld\n", filename, offset, len, rlen);
         fclose(fp);
         return -1;
     }
@@ -274,8 +276,8 @@ static int multiparts_upload(const char* host, const char* bucket, const char* o
     int64_t buf_size = part_size;
     char* buf = (char *)malloc(part_size);
     if (!buf) {
-        printf("[ERROR] %s:%d alloc memory size:%ld failed! please review code.", __FUNCTION__, __LINE__, part_size);
-
+        printf("[ERROR] %s:%d alloc memory size:%ld failed! please review code.",
+                __FUNCTION__, __LINE__, part_size);
         CU_ASSERT(0);
         return -1;
     }
@@ -285,7 +287,8 @@ static int multiparts_upload(const char* host, const char* bucket, const char* o
     part_result_node *part_result_arr = (part_result_node *)malloc(alloc_size);
     if (!part_result_arr) {
         free(buf);
-        printf("[ERROR] %s:%d alloc memory size:%ld failed! please review code.", __FUNCTION__, __LINE__, alloc_size);
+        printf("[ERROR] %s:%d alloc memory size:%ld failed! please review code.",
+                __FUNCTION__, __LINE__, alloc_size);
         CU_ASSERT(0);
         return -2;
     }
@@ -308,10 +311,10 @@ RETRY_ONCE:
         CU_ASSERT(read_length == part_size);
 
         compute_buf_md5b64(buf, part_size, base64_buf);
-        //snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", count, uploadid);
+        snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", count, uploadid);
         snprintf(header_str, 1024, "Content-Md5: %s", base64_buf);
-        resp = upload_part(host, bucket, object_key, access_key, secret_key, uploadid, count, 
-                buf, part_size, NULL, header_str, &error);
+        resp = upload_part(host, bucket, object_key, access_key, secret_key,
+                uploadid, count, buf, part_size, NULL, header_str, &error);
         if (resp->status_code != 200) {
             printf("test upload_part:\n");
             printf("status code = %ld\n", resp->status_code);
@@ -319,11 +322,13 @@ RETRY_ONCE:
             printf("error msg = %s\n", resp->body);
 
             if (retry_cnt < retry_num) {
-                printf("[WARNNING] %s:%d %s %s upload_part failed, will be retry!\n", __FUNCTION__, __LINE__, query_str, header_str);
+                printf("[WARNNING] %s:%d %s %s upload_part failed, will be retry!\n",
+                        __FUNCTION__, __LINE__, query_str, header_str);
                 retry_cnt++;
                 goto RETRY_ONCE;
             }
-            printf("[ERROR] %s:%d %s %s upload_part failed!\n", __FUNCTION__, __LINE__, query_str, header_str);
+            printf("[ERROR] %s:%d %s upload_part failed!\n",
+                    __FUNCTION__, __LINE__, header_str);
             ret++;
         }
         char *etag_ptr = strstr(resp->header, "ETag: \"");
@@ -335,7 +340,8 @@ RETRY_ONCE:
             printf("[ERROR] %s:%d response no etag\n", __FUNCTION__, __LINE__);
             CU_ASSERT(0);
         }
-        printf("[OK] %s:%d partNum %d uploadId %s %s upload_part OK!\n", __FUNCTION__, __LINE__, count, uploadid, header_str);
+        printf("[OK] %s:%d %s %s upload_part OK!\n",
+                __FUNCTION__, __LINE__, query_str, header_str);
         part_result_arr[count - 1].id = count;
         CU_ASSERT(error == 0);
         CU_ASSERT(200 == resp->status_code);
