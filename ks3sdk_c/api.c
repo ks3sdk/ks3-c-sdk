@@ -28,8 +28,8 @@ static int check_params(const char* access_key, const char* secret_key, int* err
 }
 
 static int check_buf(const char * buf_data, int buf_len) {
-    if (NULL == buf_data && buf_len > 0) {
-        fprintf(stderr, "buf_len > 0, but buf_data is null\n");
+    if (NULL == buf_data || buf_len <= 0) {
+        fprintf(stderr, "buf_data is NULL or buf_len less then zero\n");
         return -2;
     }
     return 0;
@@ -210,51 +210,89 @@ buffer* init_multipart_upload(const char* host,
     return resp;
 }
 
-buffer* upload_part(const char* host, const char* bucket, const char* object_key,
-    const char* access_key, const char* secret_key,
-    const char* buf_data, int buf_len,
-    const char* query_args, const char* headers, int* err) {
+buffer* upload_part(const char* host, const char* bucket,
+    const char* object_key, const char* access_key, const char* secret_key,
+    const char* upload_id, int part_number, const char* part_data,
+    int part_data_len, const char* query_args, const char* headers, int* err) {
     if (check_params(access_key, secret_key, err) != 0) {
         return NULL;
     }
-    if (check_buf(buf_data, buf_len) != 0) {
+    if (check_buf(part_data, part_data_len) != 0) {
         return NULL;
+    }
+    if (upload_id == NULL || strlen(upload_id) <= 0) {
+        fprintf(stderr, "upload_id is NULL\n");
+        return NULL;
+    }
+    if (part_number < 1 || part_number > 10000) {
+        fprintf(stderr, "part_number %d not in range [1-10000]\n", part_number);
+        return NULL;
+    }
+    char internal_query[1024] = { '\0' };
+    if (query_args && strlen(query_args) > 0) {
+        snprintf(internal_query, 1024, "partNumber=%d&uploadId=%s&%s",
+                part_number, upload_id, query_args);
+    } else {
+        snprintf(internal_query, 1024, "partNumber=%d&uploadId=%s",
+                part_number, upload_id);
     }
     buffer* resp = NULL;
     resp = buffer_init();
-    make_header_buf(host, PUT_METHOD, bucket, object_key, buf_data, buf_len, 
-        query_args, headers, access_key, secret_key, resp, err);
+    make_header_buf(host, PUT_METHOD, bucket, object_key, part_data,
+        part_data_len, internal_query, headers, access_key, secret_key, resp, err);
     return resp;
 }
 
 buffer* complete_multipart_upload(const char* host,
     const char* bucket, const char* object_key,
     const char* access_key, const char* secret_key,
-    const char* buf_data, int buf_len,
+    const char* upload_id, const char* parts_info, int parts_info_len,
     const char* query_args, const char* headers, int* err) {
     if (check_params(access_key, secret_key, err) != 0) {
         return NULL;
     }
-    if (check_buf(buf_data, buf_len) != 0) {
+    if (upload_id == NULL || strlen(upload_id) <= 0) {
+        fprintf(stderr, "upload_id is NULL\n");
         return NULL;
+    }
+    if (parts_info == NULL || strlen(parts_info) <= 0 || parts_info_len <= 0) {
+        fprintf(stderr, "parts_info is NULL\n");
+        return NULL;
+    }
+    char internal_query[1024] = { '\0' };
+    if (query_args && strlen(query_args) > 0) {
+        snprintf(internal_query, 1024, "uploadId=%s&%s", upload_id, query_args);
+    } else {
+        snprintf(internal_query, 1024, "uploadId=%s", upload_id);
     }
     buffer* resp = NULL;
     resp = buffer_init();
-    make_multiparts(host, POST_METHOD, bucket, object_key, buf_data, buf_len, query_args, 
-        headers, MULTI_COMPLETE_OP, access_key, secret_key, resp, err);
+    make_multiparts(host, POST_METHOD, bucket, object_key,
+            parts_info, parts_info_len, internal_query, headers,
+            MULTI_COMPLETE_OP, access_key, secret_key, resp, err);
     return resp;
 }
 
 buffer* abort_multipart_upload(const char* host,
-    const char* bucket, const char* object_key,
-    const char* access_key, const char* secret_key,
+    const char* bucket, const char* object_key, const char* access_key,
+    const char* secret_key, const char* upload_id,
     const char* query_args, const char* headers, int* err) {
     if (check_params(access_key, secret_key, err) != 0) {
         return NULL;
     }
+    if (upload_id == NULL || strlen(upload_id) <= 0) {
+        fprintf(stderr, "upload_id is NULL\n");
+        return NULL;
+    }
+    char internal_query[1024] = { '\0' };
+    if (query_args && strlen(query_args) > 0) {
+        snprintf(internal_query, 1024, "uploadId=%s&%s", upload_id, query_args);
+    } else {
+        snprintf(internal_query, 1024, "uploadId=%s", upload_id);
+    }
     buffer* resp = NULL;
     resp = buffer_init();
-    make_header(host, DELETE_METHOD, bucket, object_key, NULL, query_args, 
+    make_header(host, DELETE_METHOD, bucket, object_key, NULL, internal_query, 
         headers, access_key, secret_key, resp, err);
     return resp;
 }
@@ -281,14 +319,25 @@ buffer* list_multipart_uploads(const char* host, const char* bucket,
 
 buffer* list_parts(const char* host,
     const char* bucket, const char* object_key,
-    const char* access_key, const char* secret_key,
-    const char* query_args, const char* headers, int* err) {
+    const char* upload_id, const char* access_key,
+    const char* secret_key, const char* query_args,
+    const char* headers, int* err) {
     if (check_params(access_key, secret_key, err) != 0) {
         return NULL;
     }
+    if (upload_id == NULL || strlen(upload_id) <= 0) {
+        fprintf(stderr, "upload_id is NULL\n");
+        return NULL;
+    }
+    char internal_query[1024] = { '\0' };
+    if (query_args && strlen(query_args) > 0) {
+        snprintf(internal_query, 1024, "uploadId=%s&%s", upload_id, query_args);
+    } else {
+        snprintf(internal_query, 1024, "uploadId=%s", upload_id);
+    }
     buffer* resp = NULL;
     resp = buffer_init();
-    make_header(host, GET_METHOD, bucket, object_key, NULL, query_args, headers, 
+    make_header(host, GET_METHOD, bucket, object_key, NULL, internal_query, headers, 
         access_key, secret_key, resp, err);
     return resp;
 }
