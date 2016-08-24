@@ -308,10 +308,10 @@ RETRY_ONCE:
         CU_ASSERT(read_length == part_size);
 
         compute_buf_md5b64(buf, part_size, base64_buf);
-        snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", count, uploadid);
+        //snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", count, uploadid);
         snprintf(header_str, 1024, "Content-Md5: %s", base64_buf);
-        resp = upload_part(host, bucket, object_key, access_key, secret_key, buf, part_size,
-            query_str, header_str, &error);
+        resp = upload_part(host, bucket, object_key, access_key, secret_key, uploadid, count, 
+                buf, part_size, NULL, header_str, &error);
         if (resp->status_code != 200) {
             printf("test upload_part:\n");
             printf("status code = %ld\n", resp->status_code);
