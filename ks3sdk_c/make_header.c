@@ -206,7 +206,8 @@ static int make_header_common(const char* host, MethodType method_type,
     }
     
 	// 6. curl set op
-	curl_easy_setopt(handler, CURLOPT_URL, url);
+    curl_easy_setopt(handler, CURLOPT_NOSIGNAL, 1L);
+    curl_easy_setopt(handler, CURLOPT_URL, url);
     set_method(method_type, handler);
     curl_easy_setopt(handler, CURLOPT_HTTPHEADER, http_header);
     
