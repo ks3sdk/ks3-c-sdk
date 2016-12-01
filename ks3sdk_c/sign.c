@@ -246,9 +246,9 @@ char* make_resource_quote(const char* query_args, char* res) {
 
 static void canon_resource(const char* bucket,
 	const char* obj, const char* query_args, char* res) {
-	int len;
-	rb_node_t* root = NULL;
-	char new_query_args[1024] = { '\0' };
+    int len;
+    rb_node_t* root = NULL;
+    char new_query_args[1024] = { '\0' };
 
     strcat(res, "/");
     if (bucket != NULL) {
@@ -261,19 +261,22 @@ static void canon_resource(const char* bucket,
 
     if (query_args != NULL
 		&& strlen(query_args) > 0) {
-		// 1. build query_kv map
-		build_query_kv_map(query_args, &root);
+        // 1. build query_kv map
+        build_query_kv_map(query_args, &root);
 		// 2. iterate query_kv map and encode value
-		encode_kv_map(root, 0, 1, new_query_args);
-		len = strlen(new_query_args);
-		if (len > 0) {
-			len = len -1;
-			memset(new_query_args + len, '\0', 1);
-		}
+        encode_kv_map(root, 0, 1, new_query_args);
+        len = strlen(new_query_args);
+        if (len > 0) {
+            len = len -1;
+            memset(new_query_args + len, '\0', 1);
+        }
 		// 3. free kv map
 		rb_erase_all(root);
-		// 4. append to the tail of res
-		strcat(res, "?");
+        if (len <= 0) {
+            return;
+        }
+        // 4. append to the tail of res
+        strcat(res, "?");
         strcat(res, new_query_args);
     }
 }
