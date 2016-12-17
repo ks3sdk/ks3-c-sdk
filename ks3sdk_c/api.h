@@ -40,6 +40,11 @@ extern buffer* download_object(const char* host, const char* bucket,
     const char* object_key, const char* access_key, const char* secret_key,
     const char* query_args, const char* headers, int* err);
 
+extern buffer* head_object(const char* host,
+	const char* bucket, const char* object_key,
+	const char* access_key, const char* secret_key,
+	const char* query_args, int* err);
+
 extern buffer* delete_object(const char* host,
 	const char* bucket, const char* object_key,
 	const char* access_key, const char* secret_key,

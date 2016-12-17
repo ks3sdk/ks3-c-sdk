@@ -21,8 +21,8 @@ char sk[100];
 int load_key();
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        printf("[Usage] %s [region(bj/hz/sh/hk/skll)] [bucket_name]\n", argv[0]);
+    if (argc != 4) {
+        printf("[Usage] %s [region(bj/hz/sh/hk/skll)] [bucket_name] [object_key]\n", argv[0]);
         return 0;
     }
     int ret = load_key();
@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
 
     char* region = argv[1];
     char* bucket = argv[2];
+    char* object_key = argv[3];
     char* host = NULL;
     if (strncmp(region, "bj", strlen("bj")) == 0) {
         host = bj_host;
@@ -52,16 +53,18 @@ int main(int argc, char* argv[]) {
     int error;
     buffer* resp = NULL;
 
-    resp = list_bucket_objects(host, bucket, ak, sk, NULL, &error);
+    resp = head_object(host, bucket, object_key, ak, sk, NULL, &error);
     if (error != 0) {
         printf("curl error=%d\n", error);
         return error;
     }
 
     if (resp->status_code == 200) {
-        printf("[OK] list objects of bucket %s ok\n", bucket);
-        printf("headers as follows ======\n%s\n", resp->header);
-        printf("body as follows ======\n%s\n", resp->body);
+        printf("[OK] head object %s ok\n", object_key);
+        printf("[OK] returned headers %s ok\n", resp->header);
+        printf("[OK] returned content %s ok\n", resp->content);
+        printf("[OK] status_msg=%s\n", resp->status_msg);
+        printf("[OK] err_msg=%s\n", resp->body);
     } else {
         printf("[ERROR] status_code=%d\n", resp->status_code);
         printf("[ERROR] status_msg=%s\n", resp->status_msg);

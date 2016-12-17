@@ -146,6 +146,20 @@ extern buffer* download_object(const char* host, const char* bucket,
     return resp;
 }
 
+buffer* head_object(const char* host,
+	const char* bucket, const char* object_key,
+	const char* access_key, const char* secret_key,
+	const char* query_args, int* err) {
+    if (check_params(access_key, secret_key, err) != 0) {
+        return NULL;
+    }
+	buffer* resp = NULL;
+	resp = buffer_init();
+	make_header(host, HEAD_METHOD, bucket, object_key, NULL,
+		query_args, NULL, access_key, secret_key, resp, err);
+	return resp;
+}
+
 buffer* delete_object(const char* host,
 	const char* bucket, const char* object_key,
 	const char* access_key, const char* secret_key,

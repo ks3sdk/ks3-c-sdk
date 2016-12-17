@@ -350,7 +350,7 @@ extern char* make_origin_sign(int method_type,
 	const char* query_args, const char* headers,
 	const char* time, char* origin_sign) {
 
-	static const char* method[MethodType_END] = {"GET", "PUT", "DELETE", "POST"};
+	static const char* method[MethodType_END] = {"GET", "PUT", "DELETE", "POST", "HEAD"};
 	struct rb_node_t* root = NULL;
 	key_value kv;
 	rb_node_t* md5_node = NULL;

@@ -22,6 +22,7 @@ typedef enum {
 	PUT_METHOD,
 	DELETE_METHOD,
     POST_METHOD,
+    HEAD_METHOD,
     MethodType_END
 } MethodType;
 

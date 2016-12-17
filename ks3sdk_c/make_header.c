@@ -19,6 +19,9 @@ static void set_method(MethodType method_type, void* handler) {
     case POST_METHOD:
         curl_easy_setopt(handler, CURLOPT_POST, 1L);
 		break;
+	case HEAD_METHOD:
+		curl_easy_setopt(handler, CURLOPT_NOBODY, 1L);
+        break;
 	}
 }
 
