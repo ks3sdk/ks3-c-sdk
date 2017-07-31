@@ -312,27 +312,13 @@ static void SHA1_final(unsigned char digest[20], SHA1Context *context)
     SHA1_transform(context->state, context->buffer);
 }
 
-
-// HMAC-SHA-1:
-//
-// K - is key padded with zeros to 512 bits
-// m - is message
-// OPAD - 0x5c5c5c...
-// IPAD - 0x363636...
-//
-// HMAC(K,m) = SHA1((K ^ OPAD) . SHA1((K ^ IPAD) . m))
-void HMAC_SHA1(unsigned char hmac[20], const unsigned char *key, int key_len,
-               const unsigned char *message, int message_len)
-{
+static void HMAC_SHA1_ex(unsigned char hmac[20], const unsigned char *key, int key_len,
+                         const unsigned char *message, int message_len) {
     unsigned char kopad[64], kipad[64];
     int i;
 	unsigned char digest[20];
 
 	SHA1Context context;
-    if (key_len > 64) {
-        key_len = 64;
-    }
-
     for (i = 0; i < key_len; i++) {
         kopad[i] = key[i] ^ 0x5c;
         kipad[i] = key[i] ^ 0x36;
@@ -351,6 +337,29 @@ void HMAC_SHA1(unsigned char hmac[20], const unsigned char *key, int key_len,
     SHA1_update(&context, kopad, 64);
     SHA1_update(&context, digest, 20);
     SHA1_final(hmac, &context);
+}
+
+// HMAC-SHA-1:
+//
+// K - is key padded with zeros to 512 bits
+// m - is message
+// OPAD - 0x5c5c5c...
+// IPAD - 0x363636...
+//
+// HMAC(K,m) = SHA1((K ^ OPAD) . SHA1((K ^ IPAD) . m))
+void HMAC_SHA1(unsigned char hmac[20], const unsigned char *key, int key_len,
+               const unsigned char *message, int message_len)
+{
+    if (key_len > 64) {
+	    unsigned char processed_key[20];
+	    SHA1Context context;
+        SHA1_init(&context);
+        SHA1_update(&context, key, key_len);
+        SHA1_final(processed_key, &context);
+        HMAC_SHA1_ex(hmac, processed_key, 20, message, message_len);
+    } else {
+        HMAC_SHA1_ex(hmac, key, key_len, message, message_len);
+    }
 }
 
 #define rot(x,k) (((x) << (k)) | ((x) >> (32 - (k))))
