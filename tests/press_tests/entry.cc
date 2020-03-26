@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
     ks3_global_init();
     createbucket(ks3_api_info);
 
-    int count = 10;
+    int count = 1;
     CountDownLatch latch(count);
     map<int, Ks3Presser*> presser_map;
     for (int seq = 1; seq <= count; seq++) {
