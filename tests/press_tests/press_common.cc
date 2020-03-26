@@ -23,9 +23,10 @@ void Ks3Presser::Init(const Ks3ApiInfo& ks3_api_info,
     latch_ = latch;
 }
 
-void Ks3Presser::Run(CThread* thread, void* arg) {
-    WalkDir(src_dir_, 0);
-    latch_->CountDown();
+void* Ks3Presser::Run(void* arg) {
+    Ks3Presser *p = (Ks3Presser*)arg;
+	p->WalkDir(p->src_dir_, 0);
+    p->latch_->CountDown();
 }
 
 void Ks3Presser::WalkDir(const string& src_dir, int depth) {
