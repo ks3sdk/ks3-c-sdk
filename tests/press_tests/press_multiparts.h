@@ -26,16 +26,22 @@ struct part_info {
     }
 };
 
+struct thread_args{
+	int iPart;
+	void *pWorker;
+};
 using std::list;
 
-class Ks3Worker : public Runnable {
+class Ks3Worker {
 public:
     Ks3Worker() {
         max_part_size_ = 0;
         thread_=NULL;
+		threadArgs_ = NULL;
         thread_num_ = 0;
         buf_ = NULL;
-
+        pthread_mutex_init(&thread_mutex_[0], NULL);
+		pthread_mutex_init(&thread_mutex_[1], NULL);
     }
     ~Ks3Worker() {
         if (buf_) {
@@ -47,7 +53,11 @@ public:
             }
             delete[] buf_;
         }
-
+		if (threadArgs_) {
+			delete[] threadArgs_;
+			threadArgs_ = NULL;
+		}
+			
         if (thread_) {
             delete[] thread_;
             thread_ = NULL;
@@ -59,16 +69,20 @@ public:
                 upload_arr_[i].pop_front();
             }                
         }
+		pthread_mutex_destroy(&thread_mutex_[0]);
+		pthread_mutex_destroy(&thread_mutex_[1]);
     }
 
     int init(const Ks3ApiInfo & info,  const string &filename, 
         const string & object_key, int seq); 
 
-    void Run(CThread *thread, void *arg);
+    static void* Run(void *arg);
     
     int Start() {
         for (int i = 0; i < thread_num_; i++ ) {
-            thread_[i].Start(this, (void*)&buf_[i]);
+            //thread_[i].Start(this, (void*)&buf_[i]
+            
+			pthread_create(&thread_[i],0,Run, (void*)&threadArgs_[i]);
         }
     }
     
@@ -78,7 +92,8 @@ private:
     
     int Join() {
         for (int i = 0; i < thread_num_; i++ )
-            thread_[i].Join();
+            //thread_[i].Join();
+            pthread_join(thread_[i],NULL);
     }
 
 private:
@@ -90,10 +105,11 @@ private:
     int max_part_size_;
     char **buf_;
 
-    CThread *thread_;
+    pthread_t *thread_;
     int thread_num_;
+	thread_args *threadArgs_;
     list<part_info*> upload_arr_[2]; 
-    CThreadMutex thread_mutex_[2];
+    pthread_mutex_t thread_mutex_[2];
 };
 
 class Ks3Multiparts : public Ks3Presser {

@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "pandora/cthread.h"
+#include <string>
 #include "ks3_api_info.h"
 
 namespace ks3_c_sdk
@@ -18,21 +18,20 @@ namespace test
 {
 
 using std::string;
-using pandora::CThread;
-using pandora::Runnable;
 
-class Ks3Presser : public Runnable {
+class Ks3Presser {
 public:
     Ks3Presser() {}
 
     void Init(const Ks3ApiInfo& ks3_api_info,
             const string& src_dir, int seq, CountDownLatch* latch);
-    void Run(CThread * thread, void * arg);
+    static void* Run(void * arg);
     int Start() {
-        thread_.Start(this, NULL);
+        //thread_.Start(this, NULL);
+        pthread_create(&thread_, 0, Run, (void*)this);
     }
     int Join() {
-        thread_.Join();
+        pthread_join(thread_,NULL);
     }
     virtual void HandleFile(const string& local_file,
             const string& object_key, int32_t size,
@@ -46,7 +45,7 @@ protected:
 
 private:
     string src_dir_;
-    CThread thread_;
+    pthread_t thread_;
     CountDownLatch* latch_;
 };
 

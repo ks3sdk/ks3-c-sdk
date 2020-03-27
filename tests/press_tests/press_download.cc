@@ -16,26 +16,30 @@ void Ks3Downloader::HandleFile(const string& local_file,
     //printf("will download file=%s, obj_key=%s\n",
     //        localfile.c_str(), object_key.c_str());
     int curl_err;
-    int64_t t1 = TimeUtil::GetTime();
+    //int64_t t1 = TimeUtil::GetTime();
+	struct timeval t1;
+	gettimeofday(&t1,NULL);
     char save_file[100] = { '\0' };
     sprintf(save_file, "./%s_save_%d", relative_path.c_str(), seq_);
     buffer* resp = download_file_object(ks3_api_info_.host.c_str(),
             ks3_api_info_.bucket.c_str(), object_key.c_str(),
             save_file, ks3_api_info_.access_key.c_str(),
             ks3_api_info_.secret_key.c_str(), NULL, NULL, &curl_err);
-    int64_t t2 = TimeUtil::GetTime();
+    //int64_t t2 = TimeUtil::GetTime();
+    struct timeval t2;
+	gettimeofday(&t2,NULL);
     if (curl_err != 0) {
         printf("[FAIL]seq=%d, network failure, file=%s, error=%d, ut=%ld us\n",
-                seq_, local_file.c_str(), curl_err, (t2 - t1));
+                seq_, local_file.c_str(), curl_err, (t2.tv_usec - t1.tv_usec));
         return;
     }
     if (resp->status_code != 200) {
         printf("[FAIL]seq=%d, file=%s, status code=%d, status msg=%s, ut=%ld us\n",
-                seq_, local_file.c_str(), resp->status_code, resp->status_msg, (t2 - t1));
+                seq_, local_file.c_str(), resp->status_code, resp->status_msg, (t2.tv_usec - t1.tv_usec));
         return;
     }
     printf("[OK], seq=%d, file=%s, save_file=%s, size=%d, ut=%ld us\n", seq_,
-            local_file.c_str(), save_file, size, (t2 - t1));
+            local_file.c_str(), save_file, size, (t2.tv_usec - t1.tv_usec));
     buffer_free(resp);
 }
 

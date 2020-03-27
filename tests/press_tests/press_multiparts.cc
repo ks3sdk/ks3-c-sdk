@@ -212,13 +212,16 @@ int Ks3Worker::init(const Ks3ApiInfo & info,  const string &filename,
         thread_num_ = thread_num;
 
 
-    thread_ = new (std::nothrow) CThread[thread_num_];
+    thread_ = new (std::nothrow) pthread_t[thread_num_];
     assert(thread_ != NULL);
 
     buf_ = new (std::nothrow) char*[thread_num_];
+	threadArgs_ = new (std::nothrow) thread_args[thread_num_];
     assert(buf_ != NULL);
     for ( int i = 0; i < thread_num_; ++i) {
         buf_[i] = new (std::nothrow) char[max_part_size_];
+		threadArgs_[i].iPart = i;
+		threadArgs_[i].pWorker = (void*)this;
         assert(buf_[i] != NULL);
     }
     return 0;
@@ -264,9 +267,13 @@ int Ks3Worker::parser_file(const char* filename, int &part_num) {
     return part_num;
 }
 
-void Ks3Worker::Run(CThread *thread, void *arg) {
-    part_info *info = NULL;
-    char *buf_ptr = *(char **)arg;
+void* Ks3Worker::Run(void *arg) {
+    thread_args *pArgs = (thread_args*)arg;
+	Ks3Worker *p = (Ks3Worker*)pArgs->pWorker;
+	int iPart = pArgs->iPart;
+	
+	part_info *info = NULL;
+    char *buf_ptr = NULL;
     
     char header_str[1024];
     char query_str[1024];
@@ -278,41 +285,52 @@ void Ks3Worker::Run(CThread *thread, void *arg) {
     const int max_retry_num = 3;
 
     while(1) {
-        thread_mutex_[0].Lock();
-        if (!upload_arr_[0].empty()) {
-            info = upload_arr_[0].front();
-            upload_arr_[0].pop_front();
+        //thread_mutex_[0].Lock();
+        pthread_mutex_lock(&p->thread_mutex_[0]);
+        if (!p->upload_arr_[0].empty()) {
+            info = p->upload_arr_[0].front();
+            p->upload_arr_[0].pop_front();
+			buf_ptr = p->buf_[iPart];
         } else {
-            thread_mutex_[0].Unlock();
+            //thread_mutex_[0].Unlock();
+            pthread_mutex_unlock(&p->thread_mutex_[0]);
             break;
         }
-        thread_mutex_[0].Unlock();
+        //thread_mutex_[0].Unlock();
+        pthread_mutex_unlock(&p->thread_mutex_[0]);
         retry_num = 0;
 RETRY_TAG:        
-        read_len = read_file(filename_.c_str(), buf_ptr, info->offset, info->size);
+        read_len = read_file(p->filename_.c_str(), buf_ptr, info->offset, info->size);
         assert(read_len == info->size);
         
         compute_buf_md5b64((unsigned char*)buf_ptr, info->size, base64_buf);
-        snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", info->part_num, upload_id_.c_str());
+        snprintf(query_str, 1024, "partNumber=%d&uploadId=%s", info->part_num, p->upload_id_.c_str());
         snprintf(header_str, 1024, "Content-Md5: %s", base64_buf);
-        resp = upload_part(ks3Info_.host.c_str(), ks3Info_.bucket.c_str(), object_key_.c_str(), 
-                ks3Info_.access_key.c_str(), ks3Info_.secret_key.c_str(), 
-                upload_id_.c_str(), info->part_num, buf_ptr, info->size, NULL, header_str, &ret_code);
+		pid_t pid;
+	    pthread_t tid;
+	    pid = getpid();
+	    tid = pthread_self();
+		printf("[WARN] %s:%d %s %s offset(%d)size(%d)pid(%d)tid(%d)first8bit(%08X)bufaddr(%p) \n",
+                __FUNCTION__, __LINE__, query_str, header_str, info->offset, info->size,
+                (unsigned int)pid, (unsigned int)tid, buf_ptr[0], buf_ptr);
+        resp = upload_part(p->ks3Info_.host.c_str(), p->ks3Info_.bucket.c_str(), p->object_key_.c_str(), 
+                p->ks3Info_.access_key.c_str(), p->ks3Info_.secret_key.c_str(), 
+                p->upload_id_.c_str(), info->part_num, buf_ptr, info->size, NULL, header_str, &ret_code);
         if (ret_code != 0) {
             retry_num++;
             printf("[WARN] %s:%d %s %s %s upload_part failed! ret_code=%d\n",
-                __FUNCTION__, __LINE__, object_key_.c_str(), query_str, header_str, ret_code);
+                __FUNCTION__, __LINE__, p->object_key_.c_str(), query_str, header_str, ret_code);
             if ( retry_num <= max_retry_num)
                 goto RETRY_TAG;
             else {
                 printf("[ERROR] %s:%d %s %s %s upload_part failed! ret_code=%d\n",
-                    __FUNCTION__, __LINE__, object_key_.c_str(), query_str, header_str, ret_code);
+                    __FUNCTION__, __LINE__, p->object_key_.c_str(), query_str, header_str, ret_code);
                 break;
             }
         }
 
         if (resp->status_code != 200) {
-            printf("test upload_part: seq=%d, partnum=%d\n", seq_, info->part_num);
+            printf("test upload_part: seq=%d, partnum=%d\n", p->seq_, info->part_num);
             printf("status code = %ld\n", resp->status_code);
             printf("status msg = %s\n", resp->status_msg);
             printf("error msg = %s\n", resp->body);
@@ -327,12 +345,14 @@ RETRY_TAG:
         }
         
         printf("[OK] seq=%d %s:%d %s %s upload_part OK!\n", 
-            seq_, __FUNCTION__, __LINE__, query_str, header_str);
+            p->seq_, __FUNCTION__, __LINE__, query_str, header_str);
         buffer_free(resp);
 
-        thread_mutex_[1].Lock();
-        upload_arr_[1].push_back(info);
-        thread_mutex_[1].Unlock();
+        //thread_mutex_[1].Lock();
+		pthread_mutex_lock(&p->thread_mutex_[1]);
+        p->upload_arr_[1].push_back(info);
+        //thread_mutex_[1].Unlock();
+        pthread_mutex_unlock(&p->thread_mutex_[1]);
     }
 }
 
@@ -396,7 +416,9 @@ void Ks3Multiparts::HandleFile(const string& local_file,
         const string& object_key, int32_t size,
         const string& relative_path) {
     int curl_err;
-    int64_t t1 = TimeUtil::GetTime();
+    //int64_t t1 = TimeUtil::GetTime();
+	struct timeval t1;
+	gettimeofday(&t1,NULL);
     Ks3Worker work;
     int ret = work.init(ks3_api_info_, local_file, object_key, seq_);
     if (ret != 0) {
@@ -405,13 +427,17 @@ void Ks3Multiparts::HandleFile(const string& local_file,
     }
 
     ret = work.Start();
-    int64_t t2 = TimeUtil::GetTime();
+    //int64_t t2 = TimeUtil::GetTime();
+	struct timeval t2;
+	gettimeofday(&t2,NULL);
     ret = work.Finish();
-    int64_t t3 = TimeUtil::GetTime();
+    //int64_t t3 = TimeUtil::GetTime();
+	struct timeval t3;
+	gettimeofday(&t3,NULL);
     
     printf("[OK], seq=%d, file=%s, size=%d, \n"
             "upload_ut=%ld us, complete_ut=%ld us\n", seq_,
-            local_file.c_str(), size, (t2 - t1), (t3 - t2));
+            local_file.c_str(), size, (t2.tv_usec - t1.tv_usec), (t3.tv_usec - t2.tv_usec));
 }
 
 }  // end of test
