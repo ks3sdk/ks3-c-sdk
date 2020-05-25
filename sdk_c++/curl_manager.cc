@@ -19,8 +19,6 @@
 namespace ks3 {
 namespace sdk {
 
-static const int kHeaderBufferSize = 1024;
-static const int kDataBufferSize = 4 * 1024 * 1024;
 static const std::string kHTTP = "HTTP";
 
 static const char* SUB_RESOURCES[15]={"acl", "lifecycle", "location", "logging", "notification", "partNumber", \
@@ -207,11 +205,11 @@ static std::string MethodToStr(MethodType method) {
 void CURLManager::GetQueryString(const KS3Context& ctx, bool only_ks3_resources, std::string* result) {
     result->append("/");
     result->append(ctx.bucket);
-    if (!ctx.path.empty()) {
-        if (ctx.path.at(0) != '/') {
+    if (!ctx.object_key.empty()) {
+        if (ctx.object_key.at(0) != '/') {
             result->append("/");
         }
-        result->append(ctx.path);
+        result->append(ctx.object_key);
     }
 
     bool first_par = true;

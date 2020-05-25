@@ -23,6 +23,15 @@
 namespace ks3 {
 namespace sdk {
 
+
+struct ClientContext {
+    std::string bucket;
+    std::string object_key;
+
+    ClientContext() {
+    }
+};
+
 class KS3Client {
 public:
     KS3Client(const std::string& host, int max_curl_sessions = 997);
@@ -38,7 +47,10 @@ public:
     }
 
     int Init();
+    int UploadObject(const ClientContext& ctx, char* buffer, int buffer_size, KS3Response* response);
 
+private:
+    void BuildCommContext(const ClientContext& context, unsigned int* index, KS3Context* ctx);
 private:
     DISALLOW_COPY_AND_ASSIGN(KS3Client);
 

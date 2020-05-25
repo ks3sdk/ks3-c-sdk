@@ -44,7 +44,7 @@ enum MethodType {
 
 struct KS3Context {
     std::string bucket;
-    std::string path;
+    std::string object_key;
 
     std::string accesskey;
     std::string secretkey;
@@ -69,7 +69,6 @@ struct KS3Context {
 struct KS3Response {
     int status_code;
     std::string status_msg;
-    std::string requestId;
     std::map<std::string, std::string> res_headers;
 
     std::string headers_buffer;

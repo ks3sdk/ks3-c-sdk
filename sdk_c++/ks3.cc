@@ -65,6 +65,25 @@ static std::string GetDate() {
     return date_str;
 }
 
+void KS3Client::BuildCommContext(const ClientContext& context, unsigned int* index, KS3Context* ctx) {
+    unsigned int hashcode = CalHashCode(context.object_key);
+    *index = hashcode % max_curl_sessions_;
+
+    ctx->bucket = context.bucket;
+    ctx->object_key = context.object_key;
+
+    ctx->headers.insert(std::pair<std::string, std::string>(kDate, GetDate()));
+    ctx->headers.insert(std::pair<std::string, std::string>(kHost, host_));
+}
+
+int KS3Client::UploadObject(const ClientContext& context, char* buffer, int buffer_size, KS3Response* response) {
+    unsigned int index = 0;
+    KS3Context ctx;
+    BuildCommContext(context, &index, &ctx);
+    ctx.headers.insert(std::pair<std::string, std::string>(kContentLength, std::to_string(buffer_size)));
+
+    return 0;
+}
 
 }
 }
