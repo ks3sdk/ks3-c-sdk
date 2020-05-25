@@ -11,6 +11,10 @@
 
 #include "curl_manager.h"
 #include <time.h>
+#include <algorithm>
+#include <cctype>
+#include "util.h"
+
 
 namespace ks3 {
 namespace sdk {
@@ -19,8 +23,24 @@ static const int kHeaderBufferSize = 1024;
 static const int kDataBufferSize = 4 * 1024 * 1024;
 static const std::string kHTTP = "HTTP";
 
+static const char* SUB_RESOURCES[15]={"acl", "lifecycle", "location", "logging", "notification", "partNumber", \
+	"policy", "requestPayment", "torrent", "uploadId", "uploads", "versionId", \
+	"versioning", "versions", "website"};
+
+static const char* RESPONSE_OVERIDES[6]={"response-content-type", "response-content-language", \
+	"response-expires", "response-cache-control", \
+	"response-content-disposition", "response-content-encoding"};
+
 CURLManager::CURLManager(const std::string& host) {
     host_ = host;
+
+    for (int i = 0; i < 15; i++) {
+        ks3_resources_.insert(SUB_RESOURCES[i]);
+    }
+
+    for (int i = 0; i < 6; i++) {
+        ks3_resources_.insert(RESPONSE_OVERIDES[i]);
+    }
 }
 
 int CURLManager::Init() {
@@ -84,16 +104,7 @@ static size_t read_ks3_headers(void *ptr, size_t size, size_t nmemb, void *strea
     }
 
     KS3Response* res = (KS3Response*)stream;
-    unsigned int expected_size = res->headers_used + num_bytes;
-    if (expected_size > res->headers_len) {
-        unsigned int new_size = std::max(expected_size, res->headers_len + kHeaderBufferSize);
-        res->headers = (char*)realloc(res->headers, new_size);
-        res->headers_len = new_size;
-    }
-
-    memcpy(res->headers + res->headers_used, (char*)ptr, num_bytes);
-    res->headers_used += num_bytes;
-
+    res->headers_buffer.append((char*)ptr, num_bytes);
     return num_bytes;
 }
 
@@ -116,62 +127,179 @@ static size_t read_ks3_response(void *ptr, size_t size, size_t nmemb, void *stre
     return num_bytes;
 }
 
-void CURLManager::ParseResponseHeaders(KS3Response* response) {
-	char* token = NULL;
-	char* out_ptr = NULL;
-    char* first_space = NULL;
-    char* sec_space = NULL;
+static std::string kHeaderDelimiter = "\r\n";
 
+static void Trim(std::string& value) {
+    // trim space
+    size_t tmp_space_pos = value.find_first_not_of(" ");
+    if (tmp_space_pos != std::string::npos) {
+        value.erase(0, tmp_space_pos);
+    }
+    tmp_space_pos = value.find_last_not_of(" ");
+    if (tmp_space_pos != std::string::npos) {
+        value.erase(tmp_space_pos + 1);
+    }
+}
+
+void CURLManager::ParseResponseHeaders(KS3Response* response) {
     if (handler_ == NULL || response == NULL) {
         return;
     }
 
     // 1. get http status code
     curl_easy_getinfo(handler_, CURLINFO_RESPONSE_CODE, &(response->status_code));
-    if (response->headers == NULL) {
-        return;
-    }
 
     // 2. get http status msg
 	// 2.1 get first line: start with 'HTTP'
-	token = strtok_r(response->headers, "\r\n", &out_ptr);
-    while (token != NULL) {
-        if (strncmp(kHTTP.c_str(), token, strlen(kHTTP.c_str())) == 0) {
-            // 2.2 split "HTTP/xxxx status_code status_msg" by space
-            first_space = strstr(token, " ");
-            if (first_space != NULL) {
-                sec_space = strstr(first_space + 1, " ");
-                // 2.3 copy status msg
-                if (sec_space != NULL) {
-                    response->status_msg.append(sec_space + 1);
-                }
+    size_t start_pos = 0;
+    size_t end_pos = response->headers_buffer.find(kHeaderDelimiter);
+    while (end_pos != std::string::npos) {
+        std::string tmp_str = response->headers_buffer.substr(start_pos, end_pos);
+        if (tmp_str.find(kHTTP) == 0) {
+            // split "HTTP/xxxx status_code status_msg" by space
+            size_t space_pos = tmp_str.find_last_of(" ");
+            if (space_pos != std::string::npos) {
+                // copy status msg
+                response->status_msg.append(tmp_str.substr(space_pos + 1));
             }
         } else {
             // parse all headers
-            first_space = strstr(token, ":");
-            if (first_space != NULL) {
+            size_t tmp_space = tmp_str.find(":");
+            if (tmp_space != std::string::npos) {
                 std::string header_name;
-                header_name.assign(token, first_space - token);
-                // trim space
-                header_name.erase(0, header_name.find_first_not_of(" "));
-                header_name.erase(header_name.find_last_not_of(" ") + 1);
+                header_name.assign(tmp_str.substr(0, tmp_space));
+                Trim(header_name);
 
                 std::string header_value;
-                header_value.assign(first_space + 1);
-                // trim space
-                header_value.erase(0, header_value.find_first_not_of(" "));
-                header_value.erase(header_value.find_last_not_of(" ") + 1);
+                header_value.assign(tmp_str.substr(tmp_space + 1));
+                Trim(header_value);
 
                 response->res_headers.insert(std::pair<std::string, std::string>(header_name, header_value));
             }
         }
 
-        first_space = NULL;
-        sec_space = NULL;
-        token = strtok_r(NULL, "\r\n", &out_ptr);
+        start_pos = end_pos + kHeaderDelimiter.size();
+        end_pos = response->headers_buffer.find(kHeaderDelimiter, start_pos);
     }
 }
 
+static std::string MethodToStr(MethodType method) {
+    std::string result;
+	switch(method) {
+	case PUT_METHOD:
+        result = "PUT";
+		break;
+    case POST_METHOD:
+        result = "POST";
+		break;
+	case DELETE_METHOD:
+        result = "DELETE";
+        break;
+	case HEAD_METHOD:
+        result = "HEAD";
+        break;
+    default:
+        break;
+    }
+    return result;
+}
+
+void CURLManager::GetQueryString(const KS3Context& ctx, bool only_ks3_resources, std::string* result) {
+    result->append("/");
+    result->append(ctx.bucket);
+    if (!ctx.path.empty()) {
+        if (ctx.path.at(0) != '/') {
+            result->append("/");
+        }
+        result->append(ctx.path);
+    }
+
+    bool first_par = true;
+    if (!ctx.parameters.empty()) {
+        std::map<std::string, std::string>::const_iterator mit = ctx.parameters.cbegin();
+        for (; mit != ctx.parameters.cend(); ++mit) {
+            if (only_ks3_resources && ks3_resources_.find(mit->first) == ks3_resources_.end()) {
+                continue;
+            }
+            if (first_par) {
+                result->append("?");
+                first_par = false;
+            } else {
+                result->append("&");
+            }
+            result->append(mit->first);
+            if (!(mit->second.empty())) {
+                result->append("=");
+                result->append(mit->second);
+            }
+        }
+    }
+}
+
+void CURLManager::GetStringForSign(MethodType method, const KS3Context& ctx, std::string* str_for_sign) {
+    std::map<std::string, std::string> canonical_headers;
+    std::map<std::string, std::string>::const_iterator it = ctx.headers.cbegin();
+    for (; it != ctx.headers.cend(); ++it) {
+        std::string header = it->first;
+        std::string new_header;
+        new_header.reserve(header.size() + 1);
+        std::transform(header.begin(), header.end(), new_header.begin(), tolower);
+        canonical_headers.insert(std::pair<std::string, std::string>(new_header, it->second));
+    }
+
+    // 1. append method
+    str_for_sign->clear();
+    str_for_sign->append(MethodToStr(method));
+    str_for_sign->append("\n");
+
+    // 2. append content md5
+    std::map<std::string, std::string>::iterator tit = canonical_headers.find("content-md5");
+    if (tit != canonical_headers.end()) {
+        str_for_sign->append(tit->second);
+    }
+    str_for_sign->append("\n");
+
+    // 3. append content type
+    tit = canonical_headers.find("content-type");
+    if (tit != canonical_headers.end()) {
+        str_for_sign->append(tit->second);
+    }
+    str_for_sign->append("\n");
+
+    // 4. append date
+    tit = canonical_headers.find("date");
+    if (tit != canonical_headers.end()) {
+        str_for_sign->append(tit->second);
+    }
+    str_for_sign->append("\n");
+
+    // 5. append headers start with x-kss
+    tit = canonical_headers.begin();
+    for (; tit != canonical_headers.end(); ++tit) {
+        if (tit->first.find("x-kss-") == 0) {
+            str_for_sign->append(tit->first);
+            str_for_sign->append(":");
+            str_for_sign->append(tit->second);
+            str_for_sign->append("\n");
+        }
+    }
+
+    // 6. append canonical resources
+    std::string canonical_resources;
+    GetQueryString(ctx, true, &canonical_resources);
+    str_for_sign->append(canonical_resources);
+}
+
+static void ComputeSignature(const std::string& str_for_sign, const std::string& secret_key, std::string* result) {
+	unsigned char hmac[20];
+	int b64Len = 0;
+	char b64[((20 + 1) * 4) / 3+1] = { '\0' };
+	HMAC_SHA1(hmac, (const unsigned char*)secret_key.c_str(), secret_key.size(),
+             (const unsigned char*)str_for_sign.c_str(), str_for_sign.size());
+	b64Len = base64Encode(hmac, 20, b64);
+	b64[b64Len] = '\0';
+    result->assign(b64);
+}
 
 int CURLManager::Call(MethodType method, const KS3Context& ctx, KS3Response* response) {
     ScopedLocker<MutexLock> lock(lock_);
@@ -181,33 +309,21 @@ int CURLManager::Call(MethodType method, const KS3Context& ctx, KS3Response* res
     std::string url;
     url.reserve(512);
     url.append(host_);
-    url.append("/");
-    url.append(ctx.bucket);
-    if (!ctx.path.empty()) {
-        if (ctx.path.at(0) != '/') {
-            url.append("/");
-        }
-        url.append(ctx.path);
-    }
+    GetQueryString(ctx, false, &url);
 
-    // append query string
-    bool first_par = true;
-    if (!ctx.parameters.empty()) {
-        url.append("?");
-        std::map<std::string, std::string>::const_iterator it = ctx.parameters.cbegin();
-        for (; it != ctx.parameters.cend(); ++it) {
-            if (first_par) {
-                first_par = false;
-            } else {
-                url.append("&");
-            }
-            url.append(it->first);
-            if (!(it->second.empty())) {
-                url.append("=");
-                url.append(it->second);
-            }
-        }
-    }
+    // get string for sign
+    std::string str_for_sign;
+    GetStringForSign(method, ctx, &str_for_sign);
+    // calculate signature
+    std::string signature;
+    ComputeSignature(str_for_sign, ctx.secretkey, &signature);
+
+    // auth header;
+    std::string auth_header;
+    auth_header.append("Authorization:KSS ");
+    auth_header.append(ctx.accesskey);
+    auth_header.append(":");
+    auth_header.append(signature);
 
     // 2. set url
 	curl_slist* http_header = NULL;
@@ -220,6 +336,8 @@ int CURLManager::Call(MethodType method, const KS3Context& ctx, KS3Response* res
         header.append(it->second);
         http_header = curl_slist_append(http_header, header.c_str());
     }
+    // append auth header
+    http_header = curl_slist_append(http_header, auth_header.c_str());
 
     // 4. set op
     curl_easy_setopt(handler_, CURLOPT_NOSIGNAL, 1L);

@@ -17,6 +17,7 @@
 #define _KS3_CURL_MANAGER_H_
 
 #include <map>
+#include <set>
 #include <string>
 #include <string.h>
 #include <memory>
@@ -45,6 +46,9 @@ struct KS3Context {
     std::string bucket;
     std::string path;
 
+    std::string accesskey;
+    std::string secretkey;
+
     std::map<std::string, std::string> headers;
     std::map<std::string, std::string> parameters;
 
@@ -65,11 +69,10 @@ struct KS3Context {
 struct KS3Response {
     int status_code;
     std::string status_msg;
+    std::string requestId;
     std::map<std::string, std::string> res_headers;
 
-    char* headers;
-    unsigned int headers_len;
-    unsigned int headers_used;
+    std::string headers_buffer;
 
     char* data;
     unsigned int data_len;
@@ -78,9 +81,6 @@ struct KS3Response {
     KS3Response() {
         // default http response code
         status_code = 400;
-        headers = NULL;
-        headers_len = 0;
-        headers_used = 0;
 
         data = NULL;
         data_len = 0;
@@ -88,7 +88,6 @@ struct KS3Response {
     }
 
     virtual ~KS3Response() {
-        free(headers);
         // the caller should response for malloc&free data;
         //free(data);
     }
@@ -113,6 +112,8 @@ private:
     void SetMethod(MethodType method_type);
     void ParseResponseHeaders(KS3Response* response);
     int Call(MethodType method, const KS3Context& ctx, KS3Response* response);
+    void GetQueryString(const KS3Context& ctx, bool only_ks3_resources, std::string* result);
+    void GetStringForSign(MethodType method, const KS3Context& ctx, std::string* str_for_sign);
 
 private:
     DISALLOW_COPY_AND_ASSIGN(CURLManager);
@@ -120,6 +121,8 @@ private:
 
     MutexLock lock_;
     CURL* handler_;
+
+    std::set<std::string> ks3_resources_;
 };
 
 typedef std::shared_ptr<CURLManager> CurlManagerPtr;
