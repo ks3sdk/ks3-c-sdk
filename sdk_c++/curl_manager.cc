@@ -284,6 +284,7 @@ void CURLManager::GetStringForSign(MethodType method, const KS3Context& ctx, std
 
     // 6. append canonical resources
     std::string canonical_resources;
+    canonical_resources.reserve(1024);
     GetQueryString(ctx, true, &canonical_resources);
     str_for_sign->append(canonical_resources);
 }

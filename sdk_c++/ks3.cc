@@ -21,6 +21,7 @@ namespace sdk {
 static const std::string kHost = "Host";
 static const std::string kDate = "Date";
 static const std::string kContentLength = "Content-Length";
+static const std::string kRange = "Range";
 
 static unsigned int CalHashCode(const std::string& full_path) {
     unsigned int hashcode = 0;
@@ -53,15 +54,10 @@ int KS3Client::Init() {
 }
 
 static std::string GetDate() {
-    time_t now;
-    time(&now);
-    struct tm t;
-    localtime_r(&now, &t);
-    char time_str[64] = {0};
-    snprintf(time_str, 64, "%.4d-%.2d-%.2d %.2d:%.2d:%.2d", t.tm_year+1900, t.tm_mon + 1, t.tm_mday,
-             t.tm_hour, t.tm_min, t.tm_sec);
-
-    std::string date_str(time_str);
+	char date[64] = { '\0' };
+	time_t now = time(NULL);
+	strftime(date, sizeof(date), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&now));
+    std::string date_str(date);
     return date_str;
 }
 
@@ -71,18 +67,54 @@ void KS3Client::BuildCommContext(const ClientContext& context, unsigned int* ind
 
     ctx->bucket = context.bucket;
     ctx->object_key = context.object_key;
+    ctx->accesskey = context.accesskey;
+    ctx->secretkey = context.secretkey;
 
     ctx->headers.insert(std::pair<std::string, std::string>(kDate, GetDate()));
     ctx->headers.insert(std::pair<std::string, std::string>(kHost, host_));
 }
 
-int KS3Client::UploadObject(const ClientContext& context, char* buffer, int buffer_size, KS3Response* response) {
+int KS3Client::UploadObject(const ClientContext& context, const char* buffer, int buffer_size, KS3Response* response) {
     unsigned int index = 0;
     KS3Context ctx;
     BuildCommContext(context, &index, &ctx);
     ctx.headers.insert(std::pair<std::string, std::string>(kContentLength, std::to_string(buffer_size)));
+    ctx.data = buffer;
+    ctx.data_len = buffer_size;
 
-    return 0;
+    return curl_managers_.at(index)->Put(ctx, response);
+}
+
+int KS3Client::GetObject(const ClientContext& context, char* buffer, int buffer_size, KS3Response* response) {
+    unsigned int index = 0;
+    KS3Context ctx;
+    BuildCommContext(context, &index, &ctx);
+    if (context.start_offset >= 0 && context.end_offset >= 0 && context.end_offset >= context.start_offset) {
+        // add range header
+        char tmp[128] = { '\0' };
+        snprintf(tmp, 128, "bytes=%ld-%ld", context.start_offset, context.end_offset);
+        ctx.headers.insert(std::pair<std::string, std::string>(kRange, tmp));
+    }
+    response->data = buffer;
+    response->data_len = buffer_size;
+
+    return curl_managers_.at(index)->Get(ctx, response);
+}
+
+int KS3Client::DeleteObject(const ClientContext& context, KS3Response* response) {
+    unsigned int index = 0;
+    KS3Context ctx;
+    BuildCommContext(context, &index, &ctx);
+
+    return curl_managers_.at(index)->Delete(ctx, response);
+}
+
+int KS3Client::HeadObject(const ClientContext& context, KS3Response* response) {
+    unsigned int index = 0;
+    KS3Context ctx;
+    BuildCommContext(context, &index, &ctx);
+
+    return curl_managers_.at(index)->Head(ctx, response);
 }
 
 }

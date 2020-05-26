@@ -27,14 +27,22 @@ namespace sdk {
 struct ClientContext {
     std::string bucket;
     std::string object_key;
+    std::string accesskey;
+    std::string secretkey;
+
+    // for read
+    int64_t start_offset;
+    int64_t end_offset;
 
     ClientContext() {
+        start_offset = -1;
+        end_offset = -1;
     }
 };
 
 class KS3Client {
 public:
-    KS3Client(const std::string& host, int max_curl_sessions = 997);
+    KS3Client(const std::string& host, int max_curl_sessions = 31);
     virtual ~KS3Client();
 
     // should call this when program start up
@@ -47,7 +55,10 @@ public:
     }
 
     int Init();
-    int UploadObject(const ClientContext& ctx, char* buffer, int buffer_size, KS3Response* response);
+    int UploadObject(const ClientContext& ctx, const char* buffer, int buffer_size, KS3Response* response);
+    int GetObject(const ClientContext& context, char* buffer, int buffer_size, KS3Response* response);
+    int DeleteObject(const ClientContext& context, KS3Response* response);
+    int HeadObject(const ClientContext& context, KS3Response* response);
 
 private:
     void BuildCommContext(const ClientContext& context, unsigned int* index, KS3Context* ctx);
