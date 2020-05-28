@@ -77,6 +77,7 @@ struct KS3Response {
     KS3Response() {
         // default http response code
         status_code = 400;
+        headers_buffer.reserve(4096);
     }
 
     virtual ~KS3Response() {
