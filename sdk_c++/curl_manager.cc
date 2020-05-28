@@ -113,15 +113,7 @@ static size_t read_ks3_response(void *ptr, size_t size, size_t nmemb, void *stre
     }
 
     KS3Response* res = (KS3Response*)stream;
-    unsigned int expected_size = res->data_used + num_bytes;
-    if (expected_size > res->data_len) {
-        unsigned int tmp_size = expected_size - res->data_len;
-        num_bytes -= tmp_size;
-    }
-
-    memcpy(res->data + res->data_used, (char*)ptr, num_bytes);
-    res->data_used += num_bytes;
-
+    res->content.append((char*)ptr, num_bytes);
     return num_bytes;
 }
 
@@ -187,6 +179,9 @@ static std::string MethodToStr(MethodType method) {
 	case PUT_METHOD:
         result = "PUT";
 		break;
+	case GET_METHOD:
+        result = "GET";
+		break;
     case POST_METHOD:
         result = "POST";
 		break;
@@ -240,8 +235,8 @@ void CURLManager::GetStringForSign(MethodType method, const KS3Context& ctx, std
     for (; it != ctx.headers.cend(); ++it) {
         std::string header = it->first;
         std::string new_header;
-        new_header.reserve(header.size() + 1);
-        std::transform(header.begin(), header.end(), new_header.begin(), tolower);
+        new_header.assign(header);
+        std::transform(new_header.begin(), new_header.end(), new_header.begin(), tolower);
         canonical_headers.insert(std::pair<std::string, std::string>(new_header, it->second));
     }
 

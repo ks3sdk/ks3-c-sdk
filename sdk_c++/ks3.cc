@@ -85,7 +85,7 @@ int KS3Client::UploadObject(const ClientContext& context, const char* buffer, in
     return curl_managers_.at(index)->Put(ctx, response);
 }
 
-int KS3Client::GetObject(const ClientContext& context, char* buffer, int buffer_size, KS3Response* response) {
+int KS3Client::GetObject(const ClientContext& context, KS3Response* response) {
     unsigned int index = 0;
     KS3Context ctx;
     BuildCommContext(context, &index, &ctx);
@@ -94,9 +94,11 @@ int KS3Client::GetObject(const ClientContext& context, char* buffer, int buffer_
         char tmp[128] = { '\0' };
         snprintf(tmp, 128, "bytes=%ld-%ld", context.start_offset, context.end_offset);
         ctx.headers.insert(std::pair<std::string, std::string>(kRange, tmp));
+        response->content.reserve(context.end_offset - context.start_offset + 2);
+    } else {
+        // default object size as 16MB
+        response->content.reserve(16 * 1024 * 1024);
     }
-    response->data = buffer;
-    response->data_len = buffer_size;
 
     return curl_managers_.at(index)->Get(ctx, response);
 }

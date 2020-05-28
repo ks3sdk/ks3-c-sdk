@@ -73,22 +73,13 @@ struct KS3Response {
 
     std::string headers_buffer;
 
-    char* data;
-    unsigned int data_len;
-    unsigned int data_used;
-
+    std::string content;
     KS3Response() {
         // default http response code
         status_code = 400;
-
-        data = NULL;
-        data_len = 0;
-        data_used = 0;
     }
 
     virtual ~KS3Response() {
-        // the caller should response for malloc&free data;
-        //free(data);
     }
 };
 

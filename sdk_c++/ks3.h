@@ -56,7 +56,7 @@ public:
 
     int Init();
     int UploadObject(const ClientContext& ctx, const char* buffer, int buffer_size, KS3Response* response);
-    int GetObject(const ClientContext& context, char* buffer, int buffer_size, KS3Response* response);
+    int GetObject(const ClientContext& context, KS3Response* response);
     int DeleteObject(const ClientContext& context, KS3Response* response);
     int HeadObject(const ClientContext& context, KS3Response* response);
 
