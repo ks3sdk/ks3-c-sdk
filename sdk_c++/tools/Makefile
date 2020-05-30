@@ -1,7 +1,7 @@
 CC = g++ -g -std=c++11 
 
 CFLAGES = -I ../ -O2 
-LIBS = -L ../ -lks3 -L ../lib -lcurl
+LIBS = -L ../ -lks3 -L ../lib -lcurl -lxml2
 
 SRCS := $(wildcard *.cc)
 OBJS := $(patsubst %.cc, %.o, ${SRCS})

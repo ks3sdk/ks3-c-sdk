@@ -34,9 +34,15 @@ struct ClientContext {
     int64_t start_offset;
     int64_t end_offset;
 
+    // for multiple upload
+    std::string uploadId;
+    int partNum;
+
     ClientContext() {
         start_offset = -1;
         end_offset = -1;
+
+        partNum = -1;
     }
 };
 
@@ -60,8 +66,17 @@ public:
     int DeleteObject(const ClientContext& context, KS3Response* response);
     int HeadObject(const ClientContext& context, KS3Response* response);
 
+    // multiple part uploads
+    int InitMultipartUpload(const ClientContext& ctx, KS3Response* response, std::string* uploadId);
+    int UploadPart(const ClientContext& ctx, const char* buffer, int buffer_size, KS3Response* response,
+                   std::string* etag);
+    int CompleteMultipartUpload(const ClientContext& ctx, const std::map<int, std::string>& parts, KS3Response* response);
+    int AbortMultipartUpload(const ClientContext& ctx, KS3Response* response);
+
 private:
     void BuildCommContext(const ClientContext& context, unsigned int* index, KS3Context* ctx);
+    int Call(MethodType type, unsigned int index, const KS3Context& ctx, KS3Response* result);
+
 private:
     DISALLOW_COPY_AND_ASSIGN(KS3Client);
 

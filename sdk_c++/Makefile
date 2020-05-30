@@ -28,7 +28,9 @@ ifeq ($(mode), thread)
 CXXFLAGS+=-fsanitize=thread
 endif
 
-INCPATH=-I./
+INCPATH=-I./ \
+  		-I/usr/include/libxml2
+
 DEPINCPATH=-I./ \
   		   -I./curl \
   		   -I./rapidjson/include

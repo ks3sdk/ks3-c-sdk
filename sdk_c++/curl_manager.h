@@ -77,7 +77,18 @@ struct KS3Response {
     KS3Response() {
         // default http response code
         status_code = 400;
+        Reset();
+    }
+
+    void Reset() {
+        status_msg.clear();
+        res_headers.clear();
+        headers_buffer.clear();
         headers_buffer.reserve(4096);
+
+        size_t capacity = content.capacity();
+        content.clear();
+        content.reserve(capacity);
     }
 
     virtual ~KS3Response() {

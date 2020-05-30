@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     ctx.accesskey = ak;
     ctx.secretkey = sk;
     sdk::KS3Response response;
-    code = client.DeleteObject(ctx, &response);
+    code = client.HeadObject(ctx, &response);
     if (code != 0) {
         printf("failed to call curl with error code %d\n", code);
         return -1;
