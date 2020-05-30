@@ -29,6 +29,9 @@ static const std::string kRange = "Range";
 
 // parameters
 static const std::string kUploads = "uploads";
+static const std::string kUploadId = "uploadId";
+static const std::string kPartNum = "partNumber";
+static const std::string kETag = "ETag";
 
 static unsigned int CalHashCode(const std::string& full_path) {
     unsigned int hashcode = 0;
@@ -213,6 +216,7 @@ int KS3Client::InitMultipartUpload(const ClientContext& context, KS3Response* re
             }
             xmlFreeDoc(doc);
             xmlCleanupParser();
+            xmlMemoryDump();
         }
 
     }
@@ -222,16 +226,79 @@ int KS3Client::InitMultipartUpload(const ClientContext& context, KS3Response* re
 
 int KS3Client::UploadPart(const ClientContext& context, const char* buffer, int buffer_size, KS3Response* response,
                           std::string* etag) {
-    return 0;
+    unsigned int index = 0;
+    KS3Context ctx;
+    BuildCommContext(context, &index, &ctx);
+    ctx.headers.insert(std::pair<std::string, std::string>(kContentLength, std::to_string(buffer_size)));
+    ctx.data = buffer;
+    ctx.data_len = buffer_size;
+    ctx.parameters.insert(std::pair<std::string, std::string>(kUploadId, context.uploadId));
+    ctx.parameters.insert(std::pair<std::string, std::string>(kPartNum, std::to_string(context.partNum)));
+
+    int code = Call(PUT_METHOD, index, ctx, response);
+    if (code == CURLE_OK && response->status_code == 200) {
+        std::map<std::string, std::string>::iterator it = response->res_headers.find(kETag);
+        if (it != response->res_headers.end()) {
+            (*etag).assign(it->second);
+        }
+    }
+
+    return code;
 }
 
 int KS3Client::CompleteMultipartUpload(const ClientContext& context, const std::map<int, std::string>& parts,
                                        KS3Response* response) {
-    return 0;
+    unsigned int index = 0;
+    KS3Context ctx;
+    BuildCommContext(context, &index, &ctx);
+    ctx.parameters.insert(std::pair<std::string, std::string>(kUploadId, context.uploadId));
+    // build xml content
+    xmlDocPtr doc = xmlNewDoc((const xmlChar*)"1.0");
+    xmlNodePtr root = xmlNewNode(NULL, (const xmlChar*)"CompleteMultipartUpload");
+    xmlDocSetRootElement(doc, root);
+    std::map<int, std::string>::const_iterator it = parts.cbegin();
+    for (; it != parts.cend(); ++it) {
+        xmlNodePtr child = xmlNewNode(NULL, (const xmlChar*)"Part");
+
+        xmlNodePtr part = xmlNewNode(NULL, (const xmlChar*)"PartNumber");
+        char tmp[64];
+        snprintf(tmp, 64, "%d", it->first);
+        xmlNodePtr part_content = xmlNewText((const xmlChar*)(tmp));
+        xmlAddChild(part, part_content);
+
+        xmlNodePtr etag = xmlNewNode(NULL, (const xmlChar*)kETag.c_str());
+        xmlNodePtr etag_content = xmlNewText((const xmlChar*)(it->second.c_str()));
+        xmlAddChild(etag, etag_content);
+
+        xmlAddChild(child, part);
+        xmlAddChild(child, etag);
+        xmlAddChild(root, child);
+    }
+
+    xmlChar* out = NULL;
+    int len = 0;
+    xmlDocDumpFormatMemory(doc, &out, &len, 1);
+
+    std::string content;
+    content.assign((char*)out);
+    xmlFree(out);
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+    xmlMemoryDump();
+
+    ctx.data = content.data();
+    ctx.data_len = content.size();
+
+    return Call(POST_METHOD, index, ctx, response);
 }
 
 int KS3Client::AbortMultipartUpload(const ClientContext& context, KS3Response* response) {
-    return 0;
+    unsigned int index = 0;
+    KS3Context ctx;
+    BuildCommContext(context, &index, &ctx);
+    ctx.parameters.insert(std::pair<std::string, std::string>(kUploadId, context.uploadId));
+
+    return Call(DELETE_METHOD, index, ctx, response);
 }
 
 }
