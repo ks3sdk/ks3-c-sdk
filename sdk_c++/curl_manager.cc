@@ -339,6 +339,11 @@ int CURLManager::Call(MethodType method, const KS3Context& ctx, KS3Response* res
     SetMethod(method);
     curl_easy_setopt(handler_, CURLOPT_HTTPHEADER, http_header);
 
+    if (method == POST_METHOD) {
+        curl_easy_setopt(handler_, CURLOPT_POSTFIELDS, ctx.data);
+        curl_easy_setopt(handler_, CURLOPT_POSTFIELDSIZE, ctx.data_len);
+    }
+
     if (ctx.data != NULL) {
         // put data to ks3
         // set read content func

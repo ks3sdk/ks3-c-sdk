@@ -191,6 +191,7 @@ int KS3Client::InitMultipartUpload(const ClientContext& context, KS3Response* re
     KS3Context ctx;
     BuildCommContext(context, &index, &ctx);
     ctx.parameters.insert(std::pair<std::string, std::string>(kUploads, ""));
+    ctx.headers.insert(std::pair<std::string, std::string>("Content-Type", "text/plain;charset=UTF-8"));
 
     int code = Call(POST_METHOD, index, ctx, response);
     if (code == CURLE_OK && response->status_code == 200) {
@@ -252,6 +253,8 @@ int KS3Client::CompleteMultipartUpload(const ClientContext& context, const std::
     KS3Context ctx;
     BuildCommContext(context, &index, &ctx);
     ctx.parameters.insert(std::pair<std::string, std::string>(kUploadId, context.uploadId));
+    ctx.headers.insert(std::pair<std::string, std::string>("Content-Type", "text/plain;charset=UTF-8"));
+
     // build xml content
     xmlDocPtr doc = xmlNewDoc((const xmlChar*)"1.0");
     xmlNodePtr root = xmlNewNode(NULL, (const xmlChar*)"CompleteMultipartUpload");
@@ -299,6 +302,59 @@ int KS3Client::AbortMultipartUpload(const ClientContext& context, KS3Response* r
     ctx.parameters.insert(std::pair<std::string, std::string>(kUploadId, context.uploadId));
 
     return Call(DELETE_METHOD, index, ctx, response);
+}
+
+int KS3Client::ListParts(const ClientContext& context, std::map<int, std::string>* parts, KS3Response* response) {
+    unsigned int index = 0;
+    KS3Context ctx;
+    BuildCommContext(context, &index, &ctx);
+    ctx.parameters.insert(std::pair<std::string, std::string>(kUploadId, context.uploadId));
+
+    int code = Call(GET_METHOD, index, ctx, response);
+    if (code == CURLE_OK && response->status_code == 200) {
+        xmlDocPtr doc = NULL;
+        xmlNodePtr proot = NULL;
+        xmlNodePtr cur = NULL;
+        xmlKeepBlanksDefault(0);
+        doc = xmlReadMemory(response->content.data(), response->content.size(), NULL, "UTF-8", XML_PARSE_RECOVER);
+        if (doc != NULL) {
+            proot = xmlDocGetRootElement(doc);
+            if (proot != NULL) {
+                cur = proot->xmlChildrenNode;
+                while (cur != NULL) {
+                    if (xmlStrcmp(cur->name, (const xmlChar*)("Part")) == 0) {
+                        xmlNodePtr child_cur = cur->xmlChildrenNode;
+                        int part_number = -1;
+                        std::string etag_tmp;
+                        while (child_cur != NULL) {
+                            if (xmlStrcmp(child_cur->name, (const xmlChar*)("PartNumber")) == 0) {
+                                xmlChar* tmp_content = xmlNodeGetContent(child_cur);
+                                part_number = atoi((char*)tmp_content);
+                                xmlFree(tmp_content);
+                            }
+
+                            if (xmlStrcmp(child_cur->name, (const xmlChar*)(kETag.c_str())) == 0) {
+                                xmlChar* tmp_content = xmlNodeGetContent(child_cur);
+                                etag_tmp.assign((char*)tmp_content);
+                                xmlFree(tmp_content);
+                            }
+
+                            child_cur = child_cur->next;
+                        }
+
+                        parts->insert(std::pair<int, std::string>(part_number, etag_tmp));
+                    }
+
+                    cur = cur->next;
+                }
+            }
+            xmlFreeDoc(doc);
+            xmlCleanupParser();
+            xmlMemoryDump();
+        }
+    }
+
+    return code;
 }
 
 }

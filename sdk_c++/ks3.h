@@ -72,6 +72,7 @@ public:
                    std::string* etag);
     int CompleteMultipartUpload(const ClientContext& ctx, const std::map<int, std::string>& parts, KS3Response* response);
     int AbortMultipartUpload(const ClientContext& ctx, KS3Response* response);
+    int ListParts(const ClientContext& ctx, std::map<int, std::string>* parts, KS3Response* response);
 
 private:
     void BuildCommContext(const ClientContext& context, unsigned int* index, KS3Context* ctx);
