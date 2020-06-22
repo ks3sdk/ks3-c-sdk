@@ -127,10 +127,12 @@ buffer_free(resp);
 ### 3.5 带header上传文件
 
 **注意：header之间要以'\n'分隔**
+
+```
 用户可以自行设定header：
 x-kss-acl:    private | public-read  具体详情参考：https://docs.ksyun.com/documents/937
 
-```
+
 const char* headers = "x-kss-acl:public-read\nx-kss-callbackurl:http://www.callbackurl.com/";
 resp = upload_file_object(host, bucket,
     object_key, filename, ak, sk, NULL, headers, &error);
