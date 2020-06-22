@@ -128,8 +128,32 @@ buffer_free(resp);
 
 **注意：header之间要以'\n'分隔**
 
+ACL 特殊头部
+用户可以通过以下的header为Object设置预设的ACL
+
+名称	描述	必须
+x-kss-acl	用于对象的预定义权限。
+类型：String
+默认值：private
+有效值：private &##124; public-read
+约束条件：无	否
+如果用户期望为Bucket设置详细的ACL，可以通过以下header设置
+
+名称	描述	必须
+x-kss-grant-read	为若干用户授予READ权限。
+类型：String
+默认值：无
+约束条件：无	否
+x-kss-grant-write	为若干用户授予WRITE权限。
+类型：String
+默认值：无
+约束条件：无	否
+x-kss-grant-full-control	为若干用户授予FULL_CONTROL权限。
+类型：String
+默认值：无
+约束条件：无
 ```
-const char* headers = "Content-Type:text\nx-kss-callbackurl:http://10.10.10.10:1001/";
+const char* headers = "x-kss-acl:public-read\nx-kss-callbackurl:http://www.callbackurl.com/";
 resp = upload_file_object(host, bucket,
     object_key, filename, ak, sk, NULL, headers, &error);
 if (error != 0) {
