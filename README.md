@@ -127,31 +127,9 @@ buffer_free(resp);
 ### 3.5 带header上传文件
 
 **注意：header之间要以'\n'分隔**
+用户可以自行设定header：
+x-kss-acl:    private | public-read  具体详情参考：https://docs.ksyun.com/documents/937
 
-ACL 特殊头部
-用户可以通过以下的header为Object设置预设的ACL
-
-名称	描述	必须
-x-kss-acl	用于对象的预定义权限。
-类型：String
-默认值：private
-有效值：private &##124; public-read
-约束条件：无	否
-如果用户期望为Bucket设置详细的ACL，可以通过以下header设置
-
-名称	描述	必须
-x-kss-grant-read	为若干用户授予READ权限。
-类型：String
-默认值：无
-约束条件：无	否
-x-kss-grant-write	为若干用户授予WRITE权限。
-类型：String
-默认值：无
-约束条件：无	否
-x-kss-grant-full-control	为若干用户授予FULL_CONTROL权限。
-类型：String
-默认值：无
-约束条件：无
 ```
 const char* headers = "x-kss-acl:public-read\nx-kss-callbackurl:http://www.callbackurl.com/";
 resp = upload_file_object(host, bucket,
