@@ -22,7 +22,7 @@ int load_key();
 
 int main(int argc, char* argv[]) {
     if (argc != 5) {
-        printf("[Usage] %s [region(bj/hz/sh/hk/skll)] [bucket_name] [object_key] [filename]\n", argv[0]);
+        printf("[Usage] %s [region(bj/hz/sh/hk/skll)] [bucket_name] [object_key] [filename] \n", argv[0]);
         return 0;
     }
     int ret = load_key();
@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
 
     int error;
     buffer* resp = NULL;
+    use_https = 1;
 
     resp = upload_file_object(host, bucket, object_key, filename,
             ak, sk, NULL, NULL, &error);

@@ -38,6 +38,7 @@ public:
     Ks3Worker() {
         max_part_size_ = 0;
         thread_=NULL;
+		threadArgs_ = NULL;
         thread_num_ = 0;
         buf_ = NULL;
         pthread_mutex_init(&thread_mutex_[0], NULL);
@@ -53,7 +54,11 @@ public:
             }
             delete[] buf_;
         }
-
+		if (threadArgs_) {
+			delete[] threadArgs_;
+			threadArgs_ = NULL;
+		}
+			
         if (thread_) {
             delete[] thread_;
             thread_ = NULL;

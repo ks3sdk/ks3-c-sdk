@@ -212,8 +212,7 @@ int Ks3Worker::init(const Ks3ApiInfo & info,  const string &filename,
         thread_num_ = thread_num;
 
 
-    //thread_ = new (std::nothrow) pthread_t[thread_num_];
-	thread_ = (pthread_t*)malloc(sizeof(pthread_t)*thread_num_);
+    thread_ = new (std::nothrow) pthread_t[thread_num_];
     assert(thread_ != NULL);
 
     buf_ = new (std::nothrow) char*[thread_num_];

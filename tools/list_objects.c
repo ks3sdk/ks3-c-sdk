@@ -51,6 +51,7 @@ int main(int argc, char* argv[]) {
 
     int error;
     buffer* resp = NULL;
+    use_https = 1;
 
     resp = list_bucket_objects(host, bucket, ak, sk, NULL, &error);
     if (error != 0) {

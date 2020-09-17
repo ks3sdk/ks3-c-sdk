@@ -8,6 +8,8 @@ extern "C" {
 
 #include "buffer.h"
 
+extern int use_https;
+
 extern int  ks3_global_init();
 extern void ks3_global_destroy();
 

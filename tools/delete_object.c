@@ -52,6 +52,7 @@ int main(int argc, char* argv[]) {
 
     int error;
     buffer* resp = NULL;
+    use_https = 1;
 
     resp = delete_object(host, bucket, object_key, ak, sk, NULL, &error);
     if (error != 0) {

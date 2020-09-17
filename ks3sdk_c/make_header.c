@@ -7,6 +7,8 @@
 #include "sign.h"
 #include "file_deal.h"
 
+int use_https = 0;
+
 static void set_method(MethodType method_type, void* handler) {
 	switch(method_type) {
 	case PUT_METHOD:
@@ -170,6 +172,11 @@ static int make_header_common(const char* host, MethodType method_type,
 	CURL* handler = NULL;
 	struct curl_slist* http_header = NULL;
     char *headers = (char*)headers_str;
+    if (use_https != 0) {
+        strcat(url, "https://");
+    } else {
+        strcat(url, "http://");
+    }
 
     char header_buf[1024] = { '\0' };
     if (method_type == POST_METHOD) {
@@ -206,6 +213,11 @@ static int make_header_common(const char* host, MethodType method_type,
     http_header = curl_slist_append(http_header, "Accept:");
 	if (headers != NULL) {
         http_header = curl_slist_append(http_header, headers);
+    }
+
+    if (use_https != 0) {
+        curl_easy_setopt(handler, CURLOPT_SSL_VERIFYPEER, 1L);
+        curl_easy_setopt(handler, CURLOPT_SSL_VERIFYHOST, 2L);
     }
     
 	// 6. curl set op

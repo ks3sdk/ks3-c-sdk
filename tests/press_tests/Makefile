@@ -1,7 +1,7 @@
 #CC = gcc -g 
 CC = g++ -g 
 CFLAGES = -I ../../ks3sdk_c -I ./pandora/output/include/ #-O2
-LIBS = -L ../../ks3sdk_c -lks3sdk -L ../../ks3sdk_c/lib -lcurl -L ./pandora/output/lib/
+LIBS = -L ../../ks3sdk_c -lks3sdk -L ../../ks3sdk_c/lib -lcurl 
 SRCS := $(wildcard *.cc)
 OBJS := $(patsubst %.cc, %.o, ${SRCS})
 
