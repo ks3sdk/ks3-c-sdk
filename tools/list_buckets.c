@@ -50,6 +50,7 @@ int main(int argc, char* argv[]) {
 
     int error;
     buffer* resp = NULL;
+    use_https = 1;
 
     resp = list_all_bucket(host, ak, sk, &error);
     if (error != 0) {

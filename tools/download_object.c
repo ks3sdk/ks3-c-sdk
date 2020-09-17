@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
 
     int error;
     buffer* resp = NULL;
+    use_https = 1;
 
     resp = download_file_object(host, bucket, object_key, filename,
             ak, sk, NULL, NULL, &error);
