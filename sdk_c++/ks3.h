@@ -48,7 +48,7 @@ struct ClientContext {
 
 class KS3Client {
 public:
-    KS3Client(const std::string& host, int max_curl_sessions = 31);
+    KS3Client(const std::string& host, int max_curl_sessions = 31, bool use_https = false);
     virtual ~KS3Client();
 
     // should call this when program start up
@@ -81,6 +81,7 @@ private:
 private:
     DISALLOW_COPY_AND_ASSIGN(KS3Client);
 
+    bool use_https_;
     std::string host_;
     int max_curl_sessions_;
     std::vector<CurlManagerPtr> curl_managers_;

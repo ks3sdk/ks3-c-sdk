@@ -29,7 +29,8 @@ static const char* RESPONSE_OVERIDES[6]={"response-content-type", "response-cont
 	"response-expires", "response-cache-control", \
 	"response-content-disposition", "response-content-encoding"};
 
-CURLManager::CURLManager(const std::string& host) {
+CURLManager::CURLManager(const std::string& host, bool use_https) {
+    use_https_ = use_https;
     host_ = host;
 
     for (int i = 0; i < 15; i++) {
@@ -302,6 +303,11 @@ int CURLManager::Call(MethodType method, const KS3Context& ctx, KS3Response* res
     // 1. construct url
     std::string url;
     url.reserve(512);
+    if (use_https_) {
+        url.append("https://");
+    } else {
+        url.append("http://");
+    }
     url.append(host_);
     GetQueryString(ctx, false, &url);
 
@@ -334,6 +340,11 @@ int CURLManager::Call(MethodType method, const KS3Context& ctx, KS3Response* res
     http_header = curl_slist_append(http_header, auth_header.c_str());
 
     // 4. set op
+    if (use_https_) {
+        curl_easy_setopt(handler_, CURLOPT_SSL_VERIFYPEER, 1L);
+        curl_easy_setopt(handler_, CURLOPT_SSL_VERIFYHOST, 2L);
+    }
+
     curl_easy_setopt(handler_, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(handler_, CURLOPT_URL, url.c_str());
     SetMethod(method);

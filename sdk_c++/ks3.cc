@@ -49,9 +49,10 @@ static int SleepMs(int64_t milli_seconds) {
     return nanosleep(&ts, NULL);
 }
 
-KS3Client::KS3Client(const std::string& host, int max_curl_sessions) {
+KS3Client::KS3Client(const std::string& host, int max_curl_sessions, bool use_https) {
     host_ = host;
     max_curl_sessions_ = max_curl_sessions;
+    use_https_ = use_https;
 }
 
 KS3Client::~KS3Client() {
@@ -59,7 +60,7 @@ KS3Client::~KS3Client() {
 
 int KS3Client::Init() {
     for (int i = 0; i < max_curl_sessions_; ++i) {
-        CurlManagerPtr tmp(new CURLManager(host_));
+        CurlManagerPtr tmp(new CURLManager(host_, use_https_));
         if (tmp->Init() != 0) {
             return -1;
         }

@@ -97,7 +97,7 @@ struct KS3Response {
 
 class CURLManager {
 public:
-    CURLManager(const std::string& host);
+    CURLManager(const std::string& host, bool use_https);
     virtual ~CURLManager() {
         curl_easy_cleanup(handler_);
     }
@@ -120,6 +120,7 @@ private:
 private:
     DISALLOW_COPY_AND_ASSIGN(CURLManager);
     std::string host_;
+    bool use_https_;
 
     MutexLock lock_;
     CURL* handler_;

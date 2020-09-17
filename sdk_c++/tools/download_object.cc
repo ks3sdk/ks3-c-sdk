@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
         tmp.append(":");
         tmp.append(it->second);
         tmp.append("\n");
-        printf("%s", tmp.c_str());
+    //    printf("%s", tmp.c_str());
     }
     // printf content
     printf("following is content\n");
