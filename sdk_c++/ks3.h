@@ -46,6 +46,20 @@ struct ClientContext {
     }
 };
 
+struct ReplicationInfo {
+    // only replicate those objects which start with oneof following prefixes;
+    // default is empty, replicate all objects
+    std::vector<std::string> prefixes;
+    std::string target_bucket;
+    // true:replicate delete operation;
+    // false: don't replicate delete operation;
+    bool enable_delete_replication;
+
+    ReplicationInfo() {
+        enable_delete_replication = true;
+    }
+};
+
 class KS3Client {
 public:
     KS3Client(const std::string& host, int max_curl_sessions = 31, bool use_https = false);
@@ -74,9 +88,14 @@ public:
     int AbortMultipartUpload(const ClientContext& ctx, KS3Response* response);
     int ListParts(const ClientContext& ctx, std::map<int, std::string>* parts, KS3Response* response);
 
+    // cross region replication
+    int SetReplication(const ClientContext& ctx, const ReplicationInfo& crr_ctx, KS3Response* response);
+    int GetReplication(const ClientContext& ctx, ReplicationInfo* crr_ctx, KS3Response* response);
+    int DeleteReplication(const ClientContext& ctx, KS3Response* response);
+
 private:
     void BuildCommContext(const ClientContext& context, unsigned int* index, KS3Context* ctx);
-    int Call(MethodType type, unsigned int index, const KS3Context& ctx, KS3Response* result);
+    int Call(MethodType type, unsigned int index, KS3Context& ctx, KS3Response* result);
 
 private:
     DISALLOW_COPY_AND_ASSIGN(KS3Client);

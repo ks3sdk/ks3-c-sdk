@@ -21,9 +21,9 @@ namespace sdk {
 
 static const std::string kHTTP = "HTTP";
 
-static const char* SUB_RESOURCES[15]={"acl", "lifecycle", "location", "logging", "notification", "partNumber", \
+static const char* SUB_RESOURCES[16]={"acl", "lifecycle", "location", "logging", "notification", "partNumber", \
 	"policy", "requestPayment", "torrent", "uploadId", "uploads", "versionId", \
-	"versioning", "versions", "website"};
+	"versioning", "versions", "website", "crr"};
 
 static const char* RESPONSE_OVERIDES[6]={"response-content-type", "response-content-language", \
 	"response-expires", "response-cache-control", \
@@ -33,7 +33,7 @@ CURLManager::CURLManager(const std::string& host, bool use_https) {
     use_https_ = use_https;
     host_ = host;
 
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 16; i++) {
         ks3_resources_.insert(SUB_RESOURCES[i]);
     }
 
@@ -206,6 +206,8 @@ void CURLManager::GetQueryString(const KS3Context& ctx, bool only_ks3_resources,
             result->append("/");
         }
         result->append(ctx.object_key);
+    } else {
+        result->append("/");
     }
 
     bool first_par = true;
@@ -300,6 +302,8 @@ int CURLManager::Call(MethodType method, const KS3Context& ctx, KS3Response* res
     ScopedLocker<MutexLock> lock(lock_);
 
     curl_easy_reset(handler_);
+    curl_easy_setopt(handler_, CURLOPT_CONNECTTIMEOUT, 1L);
+    curl_easy_setopt(handler_, CURLOPT_TIMEOUT_MS, 60 * 1000);
     // 1. construct url
     std::string url;
     url.reserve(512);

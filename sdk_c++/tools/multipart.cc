@@ -10,7 +10,7 @@
 #include "ks3.h"
 
 const char* bj_host = "ks3-cn-beijing-internal.ksyun.com";
-const char* hz_host = "kss-internal.ksyun.com";
+const char* gz_host = "ks3-cn-guangzhou-internal.ksyun.com";
 const char* sh_host = "ks3-cn-shanghai-internal.ksyun.com";
 
 char ak[100];
@@ -21,7 +21,7 @@ using namespace ks3;
 
 int main(int argc, char* argv[]) {
     if (argc != 5) {
-        printf("[Usage] %s [region(bj/hz/sh)] [bucket_name] [object_key] [content_string]\n", argv[0]);
+        printf("[Usage] %s [region(bj/gz/sh)] [bucket_name] [object_key] [content_string]\n", argv[0]);
         return 0;
     }
     int ret = load_key();
@@ -37,8 +37,8 @@ int main(int argc, char* argv[]) {
     std::string host;
     if (strncmp(region, "bj", strlen("bj")) == 0) {
         host = bj_host;
-    } else if (strncmp(region, "hz", strlen("hz")) == 0) {
-        host = hz_host;
+    } else if (strncmp(region, "gz", strlen("gz")) == 0) {
+        host = gz_host;
     } else if (strncmp(region, "sh", strlen("sh")) == 0) {
         host = sh_host;
     } else {
